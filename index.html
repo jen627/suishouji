@@ -470,8 +470,6 @@ html, body {
   transition: var(--transition);
 }
 .editor-header .btn-save:active { transform: scale(0.95); }
-.editor-header .btn-save { min-width: 62px; }
-.editor-header .btn-save.saved { background: #10B981; }
 
 /* Paper Area */
 .paper-area {
@@ -498,6 +496,7 @@ html, body {
   width: 100%;
   height: 100%;
   touch-action: none;
+  z-index: 3; /* 画笔在文字和图片之上 */
 }
 .draw-canvas-overlay {
   position: absolute;
@@ -1507,6 +1506,48 @@ html, body {
   display: none; gap: 4px; z-index: 10;
 }
 .inserted-image-wrapper.active .img-ctrls { display: flex; }
+
+/* ========== Image Layer (可拖拽图片) ========== */
+.image-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.image-layer .layer-image {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transform-origin: center;
+  cursor: grab;
+}
+.image-layer .layer-image:active { cursor: grabbing; }
+.image-layer .layer-image img {
+  width: 100%;
+  display: block;
+  border-radius: 6px;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.image-layer .layer-image.selected {
+  outline: 2px dashed var(--primary);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.image-layer .layer-image .img-ctrls {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  gap: 4px;
+  z-index: 10;
+}
+.image-layer .layer-image.selected .img-ctrls { display: flex; }
+.image-layer .img-ctrl-btn.img-del { background: rgba(239, 68, 68, 0.85); }
+.image-layer .img-ctrl-btn.img-del:active { background: rgba(220, 38, 38, 1); }
 .img-ctrl-btn {
   width: 28px; height: 28px; border-radius: 50%;
   border: none; background: rgba(0,0,0,0.55); color: white;
@@ -1594,14 +1635,15 @@ html, body {
   <div class="editor-header">
     <button class="btn-back" onclick="App.handleBack()">‹</button>
     <input type="text" class="title-input" id="noteTitle" placeholder="给这条想法起个名字…" maxlength="30">
-    <button class="btn-save" id="saveBtn" onclick="App.saveNote()">保存</button>
+    <button class="btn-save" onclick="App.handleBack()">完成</button>
   </div>
   <div class="paper-area" id="paperArea">
     <div class="paper-container" id="paperContainer">
       <div class="paper-bg" id="paperBg"></div>
+      <div class="text-layer" id="textLayer" contenteditable="true" data-placeholder="写下你的想法，或画点什么…"></div>
+      <div class="image-layer" id="imageLayer"></div>
       <canvas class="draw-canvas" id="drawCanvas"></canvas>
       <canvas class="draw-canvas-overlay" id="drawCanvasOverlay"></canvas>
-      <div class="text-layer" id="textLayer" contenteditable="true" data-placeholder="写下你的想法，或画点什么…"></div>
     </div>
   </div>
   <!-- Voice Recording Area -->
@@ -2073,6 +2115,7 @@ const App = {
     this.updateEraserDot();
     this.initPasteHandler();
     this.initImageControlHandler();
+    this.initImageLayer();
     this.initSwipeToDelete();
     this.initAutosave();
   },
@@ -2456,6 +2499,9 @@ const App = {
     this.clearVoiceState();
     document.getElementById('noteTitle').value = '';
     document.getElementById('textLayer').innerHTML = '';
+    this.state.noteImages = [];
+    this.state.selectedImageId = null;
+    this.renderImageLayer();
     this.setMode('text');
     // Default background
     this.state.currentBg = { type: 'preset', presetId: 'blank' };
@@ -2480,6 +2526,9 @@ const App = {
     this.clearVoiceState();
     document.getElementById('noteTitle').value = note.title || '';
     document.getElementById('textLayer').innerHTML = note.text || '';
+    this.state.noteImages = (note.images || []).map(i => ({ ...i }));
+    this.state.selectedImageId = null;
+    this.renderImageLayer();
     this.state.currentBg = note.background || { type: 'preset', presetId: 'blank' };
     this.applyBackground();
     this.setMode('text');
@@ -2496,14 +2545,8 @@ const App = {
   },
 
   handleBack() {
-    // Auto-save before going back
-    const title = document.getElementById('noteTitle').value.trim();
-    const text = document.getElementById('textLayer').innerHTML.trim();
-    const hasDrawing = this.hasDrawing();
-    
-    if (title || text || hasDrawing) {
-      this.saveNote(true); // silent save
-    }
+    // 退出前静默保存（内容为空时 saveNote 会自动跳过）
+    this.saveNote(true);
     if (this.state.currentCollectionId) {
       this.openCollection(this.state.currentCollectionId);
     } else {
@@ -2749,7 +2792,9 @@ const App = {
 
   renderColorPalette() {
     const palette = document.getElementById('colorPalette');
-    palette.innerHTML = this.colors.map(c => 
+    // 去掉最后的白色「透明」圆点，透明度由右侧滑块调节
+    const drawColors = this.colors.filter(c => c !== '#FFFFFF');
+    palette.innerHTML = drawColors.map(c =>
       `<div class="color-dot ${c === this.state.drawColor ? 'active' : ''}" style="background:${c}" onclick="App.setDrawColor('${c}')"></div>`
     ).join('');
     this.updateColorPreview();
@@ -3667,20 +3712,8 @@ const App = {
     clearTimeout(this._autosaveTimer);
     this._autosaveTimer = setTimeout(() => {
       if (this.state.currentView !== 'editorView') return;
-      if (this.saveNote(true, true)) this.showAutosaveHint();
+      this.saveNote(true, true); // 静默保存，不打扰输入
     }, 1500);
-  },
-
-  showAutosaveHint() {
-    const btn = document.getElementById('saveBtn');
-    if (!btn) return;
-    btn.textContent = '✓ 已自动保存';
-    btn.classList.add('saved');
-    clearTimeout(this._autosaveHintTimer);
-    this._autosaveHintTimer = setTimeout(() => {
-      btn.textContent = '保存';
-      btn.classList.remove('saved');
-    }, 1800);
   },
 
   saveNote(silent = false, fromAutosave = false) {
@@ -3694,7 +3727,7 @@ const App = {
       drawingData = canvas.toDataURL('image/png');
     }
     
-    if (!title && !textTrimmed && !drawingData && !this.state.voiceDataUrl) {
+    if (!title && !textTrimmed && !drawingData && !this.state.voiceDataUrl && !(this.state.noteImages && this.state.noteImages.length)) {
       if (!silent) this.toast('内容为空，未保存');
       return false;
     }
@@ -3711,6 +3744,7 @@ const App = {
         notes[idx].drawingData = drawingData;
         notes[idx].voiceData = this.state.voiceDataUrl || null;
         notes[idx].background = this.state.currentBg;
+        notes[idx].images = this.state.noteImages || [];
         notes[idx].updatedAt = now;
         this.state.currentNote = notes[idx];
         // 自动保存创建的笔记：首次手动保存时补上合集选择
@@ -3730,6 +3764,7 @@ const App = {
         drawingData: drawingData,
         voiceData: this.state.voiceDataUrl || null,
         background: this.state.currentBg,
+        images: this.state.noteImages || [],
         collection: null,
         createdAt: now,
         updatedAt: now,
@@ -4051,13 +4086,16 @@ const App = {
     const maxW = body.clientWidth;
     const maxH = body.clientHeight;
     let w = img.width, h = img.height;
-    const scale = Math.min(maxW / w, maxH / h, 1);
+    // 高清裁剪：内部画布最长边保留到 1600px，显示时再缩放
+    const MAX_SIDE = 1600;
+    const scale = Math.min(1, MAX_SIDE / Math.max(w, h));
     w = Math.floor(w * scale);
     h = Math.floor(h * scale);
     canvas.width = w;
     canvas.height = h;
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
+    const displayScale = Math.min(maxW / w, maxH / h);
+    canvas.style.width = Math.floor(w * displayScale) + 'px';
+    canvas.style.height = Math.floor(h * displayScale) + 'px';
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, w, h);
   },
@@ -4208,6 +4246,9 @@ const App = {
     };
 
     if (region === 'inside') {
+      // JPEG 输出需要白底，否则透明区域会变黑
+      outCtx.fillStyle = '#FFFFFF';
+      outCtx.fillRect(0, 0, w, h);
       buildPath(outCtx);
       outCtx.clip();
       outCtx.drawImage(canvas, 0, 0);
@@ -4227,14 +4268,27 @@ const App = {
     document.getElementById('imageCropModal').classList.remove('active');
     document.getElementById('imageCropChoice').classList.remove('active');
 
-    const croppedUrl = outCanvas.toDataURL('image/png');
-    const textLayer = document.getElementById('textLayer');
-    textLayer.focus();
+    // 高清 JPEG 输出（体积远小于 PNG，分辨率最高 1600px）
+    const croppedUrl = outCanvas.toDataURL('image/jpeg', 0.9);
+
+    // 加入可拖拽图片图层，默认放在纸张中上部
     const imgId = 'img_' + Date.now();
-    const imgHtml = `<div contenteditable="false" class="inserted-image-wrapper" data-img-id="${imgId}" data-rotate="0" style="width:260px;"><img src="${croppedUrl}" style="transform:rotate(0deg);"><div class="img-ctrls"><button class="img-ctrl-btn" data-action="rotl" title="左转">↺</button><button class="img-ctrl-btn" data-action="rotr" title="右转">↻</button><button class="img-ctrl-btn" data-action="shrink" title="缩小">−</button><button class="img-ctrl-btn" data-action="grow" title="放大">+</button></div></div><br>`;
-    // Insert at cursor
-    document.execCommand('insertHTML', false, imgHtml);
-    this.toast('图片已贴入');
+    const paper = document.getElementById('paperContainer');
+    const rect = paper.getBoundingClientRect();
+    const imgW = Math.min(240, Math.round(rect.width * 0.6));
+    this.state.noteImages = this.state.noteImages || [];
+    this.state.noteImages.push({
+      id: imgId,
+      src: croppedUrl,
+      x: Math.max(0, 50 - (imgW / rect.width) * 50),
+      y: 15,
+      w: imgW,
+      rot: 0,
+    });
+    this.renderImageLayer();
+    this.selectLayerImage(imgId);
+    this.scheduleAutosave();
+    this.toast('图片已贴入，可拖动 / 双指缩放旋转 / 长按删除');
   },
 
   cancelImageCrop() {
@@ -4243,6 +4297,158 @@ const App = {
     this.state.cropLoopClosed = false;
     document.getElementById('imageCropModal').classList.remove('active');
     document.getElementById('imageCropChoice').classList.remove('active');
+  },
+
+  // ========== Image Layer (拖动/缩放/旋转/长按删除) ==========
+  initImageLayer() {
+    this.state.noteImages = [];
+    this.state.selectedImageId = null;
+
+    const layer = document.getElementById('imageLayer');
+    layer.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // 第一根手指按下图片开始手势
+    layer.addEventListener('pointerdown', (e) => this.imagePointerDown(e));
+
+    // 第二根手指可能落在画布任意位置，监听 document 保证双指手势完整
+    document.addEventListener('pointerdown', (e) => {
+      const g = this.state.imageGesture;
+      if (g && !g.pointers.has(e.pointerId)) {
+        g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+    });
+    document.addEventListener('pointermove', (e) => this.imagePointerMove(e));
+    document.addEventListener('pointerup', (e) => this.imagePointerUp(e));
+    document.addEventListener('pointercancel', (e) => this.imagePointerUp(e));
+
+    // 控制按钮（旋转/缩放/删除）
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.image-layer .img-ctrl-btn');
+      if (!btn) return;
+      const el = btn.closest('.layer-image');
+      const img = this.state.noteImages.find(i => i.id === el.dataset.id);
+      if (!img) return;
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      if (action === 'rotl') img.rot = (img.rot - 90 + 360) % 360;
+      else if (action === 'rotr') img.rot = (img.rot + 90) % 360;
+      else if (action === 'shrink') img.w = Math.max(60, Math.round(img.w * 0.8));
+      else if (action === 'grow') img.w = Math.min(500, Math.round(img.w * 1.25));
+      else if (action === 'del') {
+        this.state.noteImages = this.state.noteImages.filter(i => i.id !== img.id);
+        this.state.selectedImageId = null;
+        this.toast('图片已删除');
+      }
+      this.renderImageLayer();
+      this.scheduleAutosave();
+    });
+
+    // 点空白处取消选中
+    document.addEventListener('click', (e) => {
+      if (this.state.currentView !== 'editorView') return;
+      if (e.target.closest('.layer-image') || e.target.closest('.img-ctrl-btn')) return;
+      if (this.state.selectedImageId) {
+        this.state.selectedImageId = null;
+        this.renderImageLayer();
+      }
+    });
+  },
+
+  renderImageLayer() {
+    const layer = document.getElementById('imageLayer');
+    layer.innerHTML = (this.state.noteImages || []).map(img => `
+      <div class="layer-image${img.id === this.state.selectedImageId ? ' selected' : ''}" data-id="${img.id}"
+           style="left:${img.x}%;top:${img.y}%;width:${img.w}px;transform:rotate(${img.rot}deg);">
+        <img src="${img.src}" draggable="false" alt="">
+        <div class="img-ctrls">
+          <button class="img-ctrl-btn" data-action="rotl" title="左转">↺</button>
+          <button class="img-ctrl-btn" data-action="rotr" title="右转">↻</button>
+          <button class="img-ctrl-btn" data-action="shrink" title="缩小">−</button>
+          <button class="img-ctrl-btn" data-action="grow" title="放大">+</button>
+          <button class="img-ctrl-btn img-del" data-action="del" title="删除">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  selectLayerImage(id) {
+    this.state.selectedImageId = id;
+    document.querySelectorAll('.image-layer .layer-image').forEach(el => {
+      el.classList.toggle('selected', el.dataset.id === id);
+    });
+  },
+
+  imagePointerDown(e) {
+    if (this.state.mode !== 'text') return; // 画笔模式下画布在上层，图片不可操作
+    const el = e.target.closest('.layer-image');
+    if (!el || e.target.closest('.img-ctrl-btn')) return;
+    const img = this.state.noteImages.find(i => i.id === el.dataset.id);
+    if (!img) return;
+    e.preventDefault();
+    this.selectLayerImage(img.id);
+    const g = this.state.imageGesture = {
+      el, img,
+      pointers: new Map([[e.pointerId, { x: e.clientX, y: e.clientY }]]),
+      startX: e.clientX, startY: e.clientY,
+      baseX: img.x, baseY: img.y, baseW: img.w, baseRot: img.rot,
+      moved: false, pinch: false, longTimer: null,
+    };
+    // 长按 500ms 视为「选择并显示删除等操作」（点按本身也会选中）
+    g.longTimer = setTimeout(() => {
+      if (this.state.imageGesture === g && !g.moved) {
+        this.selectLayerImage(img.id);
+      }
+    }, 500);
+    try { el.setPointerCapture(e.pointerId); } catch {}
+  },
+
+  imagePointerMove(e) {
+    const g = this.state.imageGesture;
+    if (!g || !g.pointers.has(e.pointerId)) return;
+    g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    e.preventDefault();
+
+    if (g.pointers.size === 1) {
+      const p = g.pointers.get(e.pointerId);
+      const dx = p.x - g.startX, dy = p.y - g.startY;
+      if (!g.moved && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      g.moved = true;
+      clearTimeout(g.longTimer);
+      // 拖动：位移换算为纸张百分比
+      const rect = document.getElementById('paperContainer').getBoundingClientRect();
+      g.img.x = Math.max(0, Math.min(100, g.baseX + (dx / rect.width) * 100));
+      g.img.y = Math.max(0, Math.min(100, g.baseY + (dy / rect.height) * 100));
+      g.el.style.left = g.img.x + '%';
+      g.el.style.top = g.img.y + '%';
+    } else if (g.pointers.size === 2) {
+      // 双指：捏合缩放 + 旋转
+      clearTimeout(g.longTimer);
+      const [p1, p2] = [...g.pointers.values()];
+      if (!g.pinch) {
+        g.startDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        g.startAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+        g.pinch = true;
+        g.moved = true;
+      }
+      const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      const scale = g.startDist > 0 ? dist / g.startDist : 1;
+      g.img.w = Math.max(60, Math.min(500, Math.round(g.baseW * scale)));
+      g.img.rot = ((g.baseRot + (angle - g.startAngle) * 180 / Math.PI) % 360 + 360) % 360;
+      g.el.style.width = g.img.w + 'px';
+      g.el.style.transform = `rotate(${g.img.rot}deg)`;
+    }
+  },
+
+  imagePointerUp(e) {
+    const g = this.state.imageGesture;
+    if (!g || !g.pointers.has(e.pointerId)) return;
+    g.pointers.delete(e.pointerId);
+    clearTimeout(g.longTimer);
+    if (g.pointers.size === 0) {
+      if (g.moved) this.scheduleAutosave();
+      this.state.imageGesture = null;
+    }
   },
 
   // ========== Voice Recording ==========

@@ -345,6 +345,12 @@ html, body {
   font-family: inherit;
 }
 .note-swipe .note-action-btn span { font-size: 20px; line-height: 1; }
+.note-swipe .note-categorize-btn {
+  right: 152px;
+  background: #F59E0B;
+  border-radius: 0;
+}
+.note-swipe .note-categorize-btn:active { background: #D97706; }
 .note-swipe .note-rename-btn {
   right: 76px;
   background: #3B82F6;
@@ -2226,9 +2232,7 @@ const App = {
     this.renderHome();
   },
 
-  // ========== Swipe-to-Delete ==========
-  swipeWidth: 152, // 与 CSS 中两个操作按钮总宽度一致（重命名 76 + 删除 76）
-
+  // ========== Swipe Actions (分类/重命名/删除) ==========
   initSwipeToDelete() {
     ['noteList', 'colNoteList'].forEach(id => {
       const list = document.getElementById(id);
@@ -2251,6 +2255,7 @@ const App = {
       startX: e.clientX,
       startY: e.clientY,
       baseX: this.getSwipeX(wrap),
+      max: parseFloat(wrap.dataset.swipeW) || 152, // 每项按钮数量不同，宽度动态
       horizontal: null,
     };
     wrap.classList.add('dragging');
@@ -2272,7 +2277,7 @@ const App = {
     }
     if (!s.horizontal) return;
     e.preventDefault();
-    const x = Math.max(-this.swipeWidth, Math.min(0, s.baseX + dx));
+    const x = Math.max(-s.max, Math.min(0, s.baseX + dx));
     this.setSwipeX(s.wrap, x);
   },
 
@@ -2282,8 +2287,8 @@ const App = {
     s.wrap.classList.remove('dragging');
     if (s.horizontal) {
       // 松手后吸附：滑过一半则展开，否则回弹
-      const open = this.getSwipeX(s.wrap) < -this.swipeWidth / 2;
-      this.setSwipeX(s.wrap, open ? -this.swipeWidth : 0);
+      const open = this.getSwipeX(s.wrap) < -s.max / 2;
+      this.setSwipeX(s.wrap, open ? -s.max : 0);
       s.wrap.classList.toggle('open', open);
       // 吞掉本次手势产生的 click，避免误触编辑/删除
       const block = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
@@ -2322,6 +2327,13 @@ const App = {
     }
     this.renderHome();
     this.toast('🗑️ 笔记已删除');
+  },
+
+  categorizeNoteById(noteId) {
+    const note = this.getNotes().find(n => n.id === noteId);
+    if (!note) return;
+    this.closeAllSwipes();
+    this.showCollectionModal(noteId, false);
   },
 
   renameNoteById(noteId) {
@@ -2365,13 +2377,20 @@ const App = {
 
   renderNoteItem(n) {
     const col = this.collections.find(c => c.id === n.collection);
+    // 未分类（含合集已删除的遗留笔记）提供「分类」按钮
+    const uncategorized = !n.collection || n.collection === 'uncategorized' || !this.collections.some(c => c.id === n.collection);
+    const swipeW = 152 + (uncategorized ? 76 : 0);
     const date = new Date(n.updatedAt || n.createdAt);
     const dateStr = `${date.getMonth()+1}月${date.getDate()}日 ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
     const previewText = (n.text || '').replace(/<[^>]*>/g, '').substring(0, 40) || '空白笔记';
     const hasDrawing = n.drawingData ? '🎨 ' : '';
     const hasVoice = n.voiceData ? '🎙️ ' : '';
     return `
-      <div class="note-swipe" data-id="${n.id}">
+      <div class="note-swipe" data-id="${n.id}" data-swipe-w="${swipeW}">
+        ${uncategorized ? `
+        <button class="note-action-btn note-categorize-btn" onclick="App.categorizeNoteById('${n.id}')" title="分类到合集">
+          <span>📁</span>分类
+        </button>` : ''}
         <button class="note-action-btn note-rename-btn" onclick="App.renameNoteById('${n.id}')" title="重命名">
           <span>✏️</span>重命名
         </button>
@@ -3734,11 +3753,11 @@ const App = {
   },
 
   // ========== Collection Modal ==========
-  showCollectionModal(noteId) {
+  showCollectionModal(noteId, showSkip = true) {
     const notes = this.getNotes();
     const note = notes.find(n => n.id === noteId);
     if (!note) return;
-    
+
     const list = document.getElementById('modalCollectionList');
     list.innerHTML = this.collections.map(col => {
       const selected = note.collection === col.id;
@@ -3749,12 +3768,12 @@ const App = {
           <div class="check">✓</div>
         </div>
       `;
-    }).join('') + `
+    }).join('') + (showSkip ? `
       <div class="modal-collection-item skip" onclick="App.skipCollection()">
         跳过，归入未分类
       </div>
-    `;
-    
+    ` : '');
+
     document.getElementById('collectionModal').classList.add('active');
   },
 
@@ -3768,10 +3787,14 @@ const App = {
     document.getElementById('collectionModal').classList.remove('active');
     const col = this.collections.find(c => c.id === colId);
     this.toast(`已归类到「${col.name}」`);
-    
+
     setTimeout(() => {
-      this.renderHome();
-      this.showView('homeView');
+      if (this.state.currentView === 'collectionView' && this.state.currentCollectionId) {
+        this.openCollection(this.state.currentCollectionId);
+      } else {
+        this.renderHome();
+        this.showView('homeView');
+      }
     }, 300);
   },
 
@@ -3789,8 +3812,12 @@ const App = {
     document.getElementById('collectionModal').classList.remove('active');
     this.toast('已归入「未分类」');
     setTimeout(() => {
-      this.renderHome();
-      this.showView('homeView');
+      if (this.state.currentView === 'collectionView' && this.state.currentCollectionId) {
+        this.openCollection(this.state.currentCollectionId);
+      } else {
+        this.renderHome();
+        this.showView('homeView');
+      }
     }, 300);
   },
 

@@ -321,19 +321,18 @@ html, body {
   overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
 }
 
-/* ========== Swipe-to-Delete ========== */
+/* ========== Swipe Actions (重命名 + 删除) ========== */
 .note-swipe {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
-.note-swipe .note-delete-btn {
+.note-swipe .note-action-btn {
   position: absolute;
-  top: 0; right: 0; bottom: 0;
+  top: 0; bottom: 0;
   width: 76px;
   border: none;
-  background: #EF4444;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -343,10 +342,20 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border-radius: var(--radius-sm);
   font-family: inherit;
 }
-.note-swipe .note-delete-btn span { font-size: 20px; line-height: 1; }
+.note-swipe .note-action-btn span { font-size: 20px; line-height: 1; }
+.note-swipe .note-rename-btn {
+  right: 76px;
+  background: #3B82F6;
+  border-radius: 0;
+}
+.note-swipe .note-rename-btn:active { background: #2563EB; }
+.note-swipe .note-delete-btn {
+  right: 0;
+  background: #EF4444;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
 .note-swipe .note-delete-btn:active { background: #DC2626; }
 .note-swipe .note-item {
   position: relative;
@@ -1325,6 +1334,35 @@ html, body {
 .col-manage-modal .modal-actions .btn-cancel { background: var(--bg); color: var(--text-secondary); }
 .col-manage-modal .modal-actions .btn-confirm { background: var(--primary); color: white; }
 
+.rename-note-modal input[type="text"] {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 15px;
+  background: var(--bg);
+  margin: 8px 0;
+  outline: none;
+}
+.rename-note-modal input[type="text"]:focus { border-color: var(--primary); }
+.rename-note-modal .modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.rename-note-modal .modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+.rename-note-modal .modal-actions .btn-cancel { background: var(--bg); color: var(--text-secondary); }
+.rename-note-modal .modal-actions .btn-confirm { background: var(--primary); color: white; }
+
 /* ========== Theme Modal ========== */
 .theme-modal-overlay {
   position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 998;
@@ -1664,6 +1702,20 @@ html, body {
     <div class="modal-actions">
       <button class="btn-cancel" onclick="App.closeColManageModal()">取消</button>
       <button class="btn-confirm" onclick="App.confirmColManage()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Rename Note Modal ========== -->
+<div class="modal-overlay" id="renameNoteModal">
+  <div class="modal-sheet rename-note-modal">
+    <div class="modal-handle"></div>
+    <h3>重命名笔记</h3>
+    <p class="modal-desc">给这条笔记起个新名字</p>
+    <input type="text" id="renameNoteInput" placeholder="输入新名称…" maxlength="30">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="App.closeRenameNoteModal()">取消</button>
+      <button class="btn-confirm" onclick="App.confirmNoteRename()">确认</button>
     </div>
   </div>
 </div>
@@ -2172,7 +2224,7 @@ const App = {
   },
 
   // ========== Swipe-to-Delete ==========
-  swipeWidth: 76, // 与 CSS 中 .note-delete-btn 宽度一致
+  swipeWidth: 152, // 与 CSS 中两个操作按钮总宽度一致（重命名 76 + 删除 76）
 
   initSwipeToDelete() {
     ['noteList', 'colNoteList'].forEach(id => {
@@ -2188,7 +2240,7 @@ const App = {
 
   swipeStart(e) {
     const wrap = e.target.closest('.note-swipe');
-    if (!wrap || e.target.closest('.note-delete-btn')) return;
+    if (!wrap || e.target.closest('.note-action-btn')) return;
     // 打开新的滑动项时，收起其他已打开的项
     this.closeAllSwipes(wrap);
     this.state.swipe = {
@@ -2269,6 +2321,45 @@ const App = {
     this.toast('🗑️ 笔记已删除');
   },
 
+  renameNoteById(noteId) {
+    const note = this.getNotes().find(n => n.id === noteId);
+    if (!note) return;
+    this.closeAllSwipes();
+    this._renamingNoteId = noteId;
+    const input = document.getElementById('renameNoteInput');
+    input.value = note.title || '';
+    document.getElementById('renameNoteModal').classList.add('active');
+    setTimeout(() => { input.focus(); input.select(); }, 100);
+  },
+
+  closeRenameNoteModal() {
+    document.getElementById('renameNoteModal').classList.remove('active');
+    this._renamingNoteId = null;
+  },
+
+  confirmNoteRename() {
+    const noteId = this._renamingNoteId;
+    const title = document.getElementById('renameNoteInput').value.trim();
+    if (!noteId) return;
+    if (!title) {
+      this.toast('名称不能为空');
+      return;
+    }
+    const notes = this.getNotes();
+    const note = notes.find(n => n.id === noteId);
+    if (!note) { this.closeRenameNoteModal(); return; }
+    note.title = title;
+    note.updatedAt = Date.now();
+    this.saveNotes(notes);
+    this.closeRenameNoteModal();
+    // 在合集详情页重命名时，同步刷新当前列表
+    if (this.state.currentView === 'collectionView' && this.state.currentCollectionId) {
+      this.openCollection(this.state.currentCollectionId);
+    }
+    this.renderHome();
+    this.toast('✏️ 已重命名');
+  },
+
   renderNoteItem(n) {
     const col = this.collections.find(c => c.id === n.collection);
     const date = new Date(n.updatedAt || n.createdAt);
@@ -2278,7 +2369,10 @@ const App = {
     const hasVoice = n.voiceData ? '🎙️ ' : '';
     return `
       <div class="note-swipe" data-id="${n.id}">
-        <button class="note-delete-btn" onclick="App.deleteNoteById('${n.id}')" title="删除笔记">
+        <button class="note-action-btn note-rename-btn" onclick="App.renameNoteById('${n.id}')" title="重命名">
+          <span>✏️</span>重命名
+        </button>
+        <button class="note-action-btn note-delete-btn" onclick="App.deleteNoteById('${n.id}')" title="删除笔记">
           <span>🗑️</span>删除
         </button>
         <div class="note-item" onclick="App.editNote('${n.id}')">

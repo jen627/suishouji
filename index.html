@@ -464,6 +464,8 @@ html, body {
   transition: var(--transition);
 }
 .editor-header .btn-save:active { transform: scale(0.95); }
+.editor-header .btn-save { min-width: 62px; }
+.editor-header .btn-save.saved { background: #10B981; }
 
 /* Paper Area */
 .paper-area {
@@ -1586,7 +1588,7 @@ html, body {
   <div class="editor-header">
     <button class="btn-back" onclick="App.handleBack()">‹</button>
     <input type="text" class="title-input" id="noteTitle" placeholder="给这条想法起个名字…" maxlength="30">
-    <button class="btn-save" onclick="App.saveNote()">保存</button>
+    <button class="btn-save" id="saveBtn" onclick="App.saveNote()">保存</button>
   </div>
   <div class="paper-area" id="paperArea">
     <div class="paper-container" id="paperContainer">
@@ -2066,6 +2068,7 @@ const App = {
     this.initPasteHandler();
     this.initImageControlHandler();
     this.initSwipeToDelete();
+    this.initAutosave();
   },
 
   initImageControlHandler() {
@@ -2429,6 +2432,7 @@ const App = {
   // ========== Editor ==========
   openEditor() {
     this.state.currentNote = null;
+    this.state.autosaveCreatedNote = false;
     this.state.drawHistory = [];
     this.clearVoiceState();
     document.getElementById('noteTitle').value = '';
@@ -2452,6 +2456,7 @@ const App = {
     const note = this.getNotes().find(n => n.id === noteId);
     if (!note) return;
     this.state.currentNote = note;
+    this.state.autosaveCreatedNote = false;
     this.state.drawHistory = [];
     this.clearVoiceState();
     document.getElementById('noteTitle').value = note.title || '';
@@ -2604,6 +2609,7 @@ const App = {
         overlay.style.opacity = 0;
       }
       this.state.isDrawing = false;
+      this.scheduleAutosave();
     };
 
     canvas.addEventListener('mousedown', startDraw);
@@ -2685,6 +2691,7 @@ const App = {
     img.onload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
+      this.scheduleAutosave();
     };
     img.src = data;
   },
@@ -2693,6 +2700,7 @@ const App = {
     if (!confirm('确定清空画布吗？')) return;
     this.saveDrawState();
     this.clearDrawCanvas();
+    this.scheduleAutosave();
   },
 
   loadDrawing(dataUrl) {
@@ -2950,6 +2958,7 @@ const App = {
       this.resizeCanvas();
     }, 150);
     this.toast('已切换稿纸');
+    this.scheduleAutosave();
   },
 
   // ========== Custom BG ==========
@@ -3069,6 +3078,7 @@ const App = {
       this.resizeCanvas();
     }, 100);
     this.toast('已应用自定义背景');
+    this.scheduleAutosave();
   },
 
   // ========== Pattern Drawing ==========
@@ -3625,7 +3635,36 @@ const App = {
   },
 
   // ========== Save Note ==========
-  saveNote(silent = false) {
+  // ========== Auto-Save ==========
+  initAutosave() {
+    const titleInput = document.getElementById('noteTitle');
+    const textLayer = document.getElementById('textLayer');
+    titleInput.addEventListener('input', () => this.scheduleAutosave());
+    textLayer.addEventListener('input', () => this.scheduleAutosave());
+  },
+
+  scheduleAutosave() {
+    if (this.state.currentView !== 'editorView') return;
+    clearTimeout(this._autosaveTimer);
+    this._autosaveTimer = setTimeout(() => {
+      if (this.state.currentView !== 'editorView') return;
+      if (this.saveNote(true, true)) this.showAutosaveHint();
+    }, 1500);
+  },
+
+  showAutosaveHint() {
+    const btn = document.getElementById('saveBtn');
+    if (!btn) return;
+    btn.textContent = '✓ 已自动保存';
+    btn.classList.add('saved');
+    clearTimeout(this._autosaveHintTimer);
+    this._autosaveHintTimer = setTimeout(() => {
+      btn.textContent = '保存';
+      btn.classList.remove('saved');
+    }, 1800);
+  },
+
+  saveNote(silent = false, fromAutosave = false) {
     const title = document.getElementById('noteTitle').value.trim();
     const text = document.getElementById('textLayer').innerHTML;
     const textTrimmed = text.trim();
@@ -3638,7 +3677,7 @@ const App = {
     
     if (!title && !textTrimmed && !drawingData && !this.state.voiceDataUrl) {
       if (!silent) this.toast('内容为空，未保存');
-      return;
+      return false;
     }
 
     const now = Date.now();
@@ -3655,6 +3694,13 @@ const App = {
         notes[idx].background = this.state.currentBg;
         notes[idx].updatedAt = now;
         this.state.currentNote = notes[idx];
+        // 自动保存创建的笔记：首次手动保存时补上合集选择
+        if (!silent && this.state.autosaveCreatedNote && !notes[idx].collection) {
+          this.state.autosaveCreatedNote = false;
+          this.saveNotes(notes);
+          this.showCollectionModal(notes[idx].id);
+          return true;
+        }
       }
     } else {
       // Create new
@@ -3672,16 +3718,19 @@ const App = {
       notes.push(newNote);
       this.state.currentNote = newNote;
       this.saveNotes(notes);
-      
+
       // Show collection modal for new notes
       if (!silent) {
         this.showCollectionModal(newNote.id);
-        return;
+        return true;
       }
+      // 自动保存创建的新笔记：记住它，稍后手动保存时补上合集选择
+      if (fromAutosave) this.state.autosaveCreatedNote = true;
     }
-    
+
     this.saveNotes(notes);
     if (!silent) this.toast('已保存 ✓');
+    return true;
   },
 
   // ========== Collection Modal ==========
@@ -4200,6 +4249,7 @@ const App = {
         reader.onload = (e) => {
           this.state.voiceDataUrl = e.target.result;
           this.showVoicePlayer();
+          this.scheduleAutosave();
         };
         reader.readAsDataURL(blob);
         // Stop all tracks

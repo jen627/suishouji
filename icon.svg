@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+  </defs>
+  <!-- Background (full bleed for maskable) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- Note paper -->
+  <g>
+    <rect x="96" y="96" width="320" height="320" rx="32" fill="#FFFFFF"/>
+    <!-- Folded corner -->
+    <path d="M 352 96 L 416 96 L 416 160 Z" fill="#DDD6FE"/>
+    <!-- Text lines -->
+    <rect x="144" y="200" width="216" height="20" rx="10" fill="#A78BFA"/>
+    <rect x="144" y="256" width="216" height="20" rx="10" fill="#C4B5FD"/>
+    <rect x="144" y="312" width="140" height="20" rx="10" fill="#C4B5FD"/>
+    <!-- Bullet dot -->
+    <circle cx="152" cy="348" r="14" fill="#EC4899"/>
+    <!-- Pencil -->
+    <g transform="translate(316, 320) rotate(-45)">
+      <rect x="-16" y="-4" width="76" height="26" rx="4" fill="#FBBF24"/>
+      <polygon points="60,-4 60,22 84,9" fill="#F59E0B"/>
+      <polygon points="84,4 84,14 96,9" fill="#78350F"/>
+    </g>
+  </g>
+</svg>

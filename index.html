@@ -1,0 +1,4298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>随手记 — 记录每一个想法</title>
+<!-- PWA -->
+<meta name="theme-color" content="#7C3AED">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="随手记">
+<style>
+/* ========== Reset & Base ========== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #7C3AED;
+  --primary-light: #A78BFA;
+  --primary-dark: #5B21B6;
+  --accent: #EC4899;
+  --amber: #F59E0B;
+  --teal: #14B8A6;
+  --bg: #FFFFFF;
+  --surface: #FFFFFF;
+  --text: #1E1B2E;
+  --text-secondary: #6B7280;
+  --text-light: #9CA3AF;
+  --border: #E5E7EB;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --body-gradient: linear-gradient(135deg, #EDE9FE 0%, #FCE7F3 50%, #FEF3C7 100%);
+}
+[data-theme="morandi"] {
+  --primary: #9B8E7E; --primary-light: #C4B8A8; --primary-dark: #6B5E4F;
+  --accent: #B8A090; --amber: #C4A882; --teal: #8AA89E;
+  --bg: #F0EBE3; --surface: #F0EBE3; --text: #3D3427;
+  --text-secondary: #8B8178; --text-light: #B0A89C; --border: #D8D0C4;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06); --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+  --body-gradient: #E8E0D5;
+}
+[data-theme="gray"] {
+  --primary: #4B5563; --primary-light: #9CA3AF; --primary-dark: #1F2937;
+  --accent: #6B7280; --amber: #9CA3AF; --teal: #64748B;
+  --bg: #F3F4F6; --surface: #F3F4F6; --text: #111827;
+  --text-secondary: #6B7280; --text-light: #9CA3AF; --border: #D1D5DB;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07); --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+  --body-gradient: #F3F4F6;
+}
+[data-theme="purple"] {
+  --primary: #7C3AED; --primary-light: #A78BFA; --primary-dark: #5B21B6;
+  --accent: #D946EF; --amber: #C084FC; --teal: #818CF8;
+  --bg: #F5F3FF; --surface: #F5F3FF; --text: #2E1065;
+  --text-secondary: #7C3AED; --text-light: #A78BFA; --border: #DDD6FE;
+  --shadow: 0 2px 12px rgba(124,58,237,0.10); --shadow-lg: 0 8px 30px rgba(124,58,237,0.15);
+  --body-gradient: #F5F3FF;
+}
+[data-theme="blue"] {
+  --primary: #2563EB; --primary-light: #60A5FA; --primary-dark: #1D4ED8;
+  --accent: #06B6D4; --amber: #3B82F6; --teal: #0EA5E9;
+  --bg: #EFF6FF; --surface: #EFF6FF; --text: #1E3A5F;
+  --text-secondary: #3B82F6; --text-light: #93C5FD; --border: #DBEAFE;
+  --shadow: 0 2px 12px rgba(59,130,246,0.10); --shadow-lg: 0 8px 30px rgba(59,130,246,0.15);
+  --body-gradient: #EFF6FF;
+}
+[data-theme="dark"] {
+  --primary: #818CF8; --primary-light: #A5B4FC; --primary-dark: #6366F1;
+  --accent: #F472B6; --amber: #FBBF24; --teal: #2DD4BF;
+  --bg: #111111; --surface: #111111; --text: #E4E4E7;
+  --text-secondary: #A1A1AA; --text-light: #71717A; --border: #27272A;
+  --shadow: 0 2px 12px rgba(0,0,0,0.5); --shadow-lg: 0 8px 30px rgba(0,0,0,0.6);
+  --body-gradient: #09090B;
+}
+[data-theme="pink"] {
+  --primary: #EC4899; --primary-light: #F472B6; --primary-dark: #BE185D;
+  --accent: #F97316; --amber: #FBBF24; --teal: #F472B6;
+  --bg: #FFF1F2; --surface: #FFF1F2; --text: #4A1024;
+  --text-secondary: #BE185D; --text-light: #F9A8D4; --border: #FCE7F3;
+  --shadow: 0 2px 12px rgba(236,72,153,0.10); --shadow-lg: 0 8px 30px rgba(236,72,153,0.15);
+  --body-gradient: #FFF1F2;
+}
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--body-gradient);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ========== Phone Frame ========== */
+#app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px;
+}
+.phone-frame {
+  width: 420px;
+  max-width: 100%;
+  height: 860px;
+  max-height: 100vh;
+  background: var(--bg);
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 0 0 12px var(--text), 0 0 0 14px var(--border), var(--shadow-lg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 28px;
+  background: var(--text);
+  border-radius: 0 0 18px 18px;
+  z-index: 1000;
+}
+@media (max-width: 480px) {
+  #app { padding: 0; }
+  .phone-frame {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .phone-frame::before { display: none; }
+}
+
+/* ========== Views ========== */
+.view {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease;
+}
+.view.active { display: flex; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ========== Status Bar ========== */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 28px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.status-bar .time { font-variant-numeric: tabular-nums; }
+.status-bar .icons { display: flex; gap: 5px; align-items: center; }
+.status-bar .icons span { font-size: 11px; }
+
+/* ========== Home View ========== */
+.home-header {
+  padding: 8px 20px 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.home-header-left { flex: 1; display: flex; align-items: center; gap: 10px; }
+.home-title {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.home-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.theme-btn {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.theme-btn:active { transform: scale(0.9); }
+.sidebar-toggle {
+  background: none; border: none; font-size: 22px; cursor: pointer;
+  padding: 4px; color: var(--text); transition: var(--transition);
+  flex-shrink: 0;
+}
+.sidebar-toggle:active { transform: scale(0.9); }
+
+/* Two-panel home layout */
+.home-body {
+  flex: 1; display: flex; overflow: hidden; position: relative;
+}
+
+/* Sidebar */
+.home-sidebar {
+  position: absolute; left: 0; top: 0; bottom: 0; z-index: 50;
+  width: 180px; background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+}
+.home-sidebar.open { transform: translateX(0); }
+.sidebar-header {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  padding: 14px 14px 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sidebar-col-list {
+  flex: 1; overflow-y: auto; padding: 0 8px 8px;
+}
+.sidebar-col-list::-webkit-scrollbar { width: 0; }
+.sidebar-col-item {
+  display: flex; align-items: center; gap: 8px; padding: 10px 10px;
+  border-radius: 10px; cursor: pointer; transition: var(--transition);
+  margin-bottom: 2px; position: relative;
+}
+.sidebar-col-item:active { transform: scale(0.97); }
+.sidebar-col-item.active { background: var(--bg); }
+.sidebar-col-item .col-icon { font-size: 16px; flex-shrink: 0; }
+.sidebar-col-item .col-name {
+  font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar-col-item .col-count {
+  font-size: 11px; color: var(--text-light); margin-left: auto; flex-shrink: 0;
+}
+.sidebar-col-item .col-bar {
+  position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+.sidebar-add-col {
+  display: flex; align-items: center; gap: 6px; padding: 10px;
+  margin: 4px 8px 8px; border-radius: 10px; border: 1.5px dashed var(--border);
+  cursor: pointer; font-size: 12px; color: var(--text-secondary);
+  transition: var(--transition);
+}
+.sidebar-add-col:active { border-color: var(--primary); color: var(--primary); }
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 49;
+  display: none;
+}
+.sidebar-overlay.show { display: block; }
+
+/* Main content (right panel) */
+.home-main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  padding: 0 16px;
+}
+.home-main-header {
+  font-size: 13px; font-weight: 700; color: var(--text-secondary);
+  padding: 4px 4px 10px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.home-main-header .count {
+  font-size: 11px; color: var(--text-light); font-weight: 500;
+  background: var(--bg); padding: 2px 8px; border-radius: 20px;
+}
+.note-list {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+  gap: 10px; padding-bottom: 90px;
+}
+.note-list::-webkit-scrollbar { width: 0; }
+.note-item {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.note-item:active { transform: translateX(var(--swipe-x, 0px)) scale(0.98); }
+.note-item .note-preview {
+  width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0;
+  background: var(--bg); display: flex; align-items: center;
+  justify-content: center; font-size: 20px; overflow: hidden;
+}
+.note-item .note-info { flex: 1; min-width: 0; }
+.note-item .note-title {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.note-item .note-meta {
+  font-size: 11px; color: var(--text-light); margin-top: 2px;
+  display: flex; gap: 8px; align-items: center;
+}
+.note-item .note-tag {
+  font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600;
+}
+.note-item .note-text-preview {
+  font-size: 12px; color: var(--text-secondary); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
+}
+
+/* ========== Swipe-to-Delete ========== */
+.note-swipe {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.note-swipe .note-delete-btn {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 76px;
+  border: none;
+  background: #EF4444;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+}
+.note-swipe .note-delete-btn span { font-size: 20px; line-height: 1; }
+.note-swipe .note-delete-btn:active { background: #DC2626; }
+.note-swipe .note-item {
+  position: relative;
+  transform: translateX(var(--swipe-x, 0px));
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+}
+.note-swipe.dragging .note-item { transition: none; }
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--text-light);
+}
+.empty-state .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* Legacy collection-grid for collection detail view */
+.collection-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.collection-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 16px 10px; text-align: center; cursor: pointer;
+  transition: var(--transition); border: 2px solid transparent;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.collection-card:active { transform: scale(0.95); }
+.collection-card .icon { font-size: 28px; display: block; margin-bottom: 6px; }
+.collection-card .name { font-size: 13px; font-weight: 600; color: var(--text); }
+.collection-card .note-count { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+.collection-card .color-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+}
+.add-collection-btn {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); border: 2px dashed var(--border);
+  border-radius: 16px; cursor: pointer; transition: var(--transition);
+  min-height: 80px; font-size: 14px; color: var(--text-secondary); gap: 6px;
+}
+.add-collection-btn:active { transform: scale(0.95); }
+
+/* FAB */
+.fab {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none;
+  color: white;
+  /* Keep fab text white regardless of theme */
+  font-size: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+  transition: var(--transition);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fab:active { transform: scale(0.9); }
+
+/* ========== Editor View ========== */
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 10px;
+  background: var(--surface);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.editor-header .btn-back {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--primary);
+  transition: var(--transition);
+}
+.editor-header .btn-back:active { transform: scale(0.9); }
+.editor-header .title-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+}
+.editor-header .title-input::placeholder { color: var(--text-light); }
+.editor-header .btn-save {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.editor-header .btn-save:active { transform: scale(0.95); }
+
+/* Paper Area */
+.paper-area {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+.paper-area::-webkit-scrollbar { width: 0; }
+.paper-container {
+  position: relative;
+  min-height: 100%;
+  width: 100%;
+}
+.paper-bg {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+}
+.draw-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.draw-canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  pointer-events: none;
+  z-index: 5;
+}
+.text-layer {
+  position: absolute;
+  inset: 0;
+  padding: 24px 20px;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text);
+  word-break: break-word;
+  min-height: 100%;
+  caret-color: var(--primary);
+}
+.text-layer:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-light);
+  pointer-events: none;
+}
+
+/* Editor Toolbar */
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+  background: var(--surface);
+  box-shadow: 0 -1px 6px rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  row-gap: 6px;
+}
+.tool-btn {
+  background: var(--bg);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+  color: var(--text);
+}
+.tool-btn:active { transform: scale(0.9); }
+.tool-btn.active {
+  background: var(--primary);
+  color: white;
+}
+.tool-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.color-palette {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.color-dot:active { transform: scale(0.85); }
+.color-dot.active {
+  box-shadow: 0 0 0 2px var(--primary);
+  transform: scale(1.15);
+}
+.opacity-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.opacity-slider-wrap label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.opacity-slider {
+  width: 36px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.opacity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+}
+.opacity-value {
+  font-size: 10px;
+  color: var(--text-secondary);
+  min-width: 24px;
+  text-align: center;
+}
+.color-current-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.color-current-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 8px 8px;
+}
+.color-current-preview .fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.brush-size-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.brush-size-btn:active { transform: scale(0.9); }
+.brush-size-btn .dot {
+  border-radius: 50%;
+  background: var(--text);
+}
+.eraser-size-btn .dot {
+  border-radius: 50%;
+  background: var(--text-light);
+  border: 1px dashed var(--border);
+}
+
+/* ========== Background Picker ========== */
+.bg-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 10px;
+  background: var(--surface);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+.bg-picker-header h2 { font-size: 17px; font-weight: 700; flex: 1; }
+.bg-picker-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.bg-picker-content::-webkit-scrollbar { width: 0; }
+.bg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.bg-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 3px solid transparent;
+  box-shadow: var(--shadow);
+  position: relative;
+  aspect-ratio: 3 / 4;
+}
+.bg-card:active { transform: scale(0.96); }
+.bg-card.selected { border-color: var(--primary); }
+.bg-card .preview {
+  width: 100%;
+  height: 100%;
+}
+.bg-card .label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(transparent, rgba(0,0,0,0.5));
+  text-align: center;
+}
+.bg-card.custom-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(135deg, #F3E8FF, #FCE7F3);
+  color: var(--primary);
+}
+.bg-card.custom-card .plus { font-size: 32px; }
+.bg-card.custom-card .text { font-size: 13px; font-weight: 600; }
+
+/* ========== Custom BG Maker ========== */
+.custom-bg-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 10px;
+  background: var(--surface);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+.custom-bg-header h2 { font-size: 17px; font-weight: 700; flex: 1; }
+.custom-bg-header .btn-done {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.custom-bg-header .btn-done:active { transform: scale(0.95); }
+.custom-bg-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.custom-bg-content::-webkit-scrollbar { width: 0; }
+.custom-bg-preview {
+  width: 100%;
+  height: 200px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.custom-bg-section {
+  margin-bottom: 24px;
+}
+.custom-bg-section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+.color-grid .color-swatch {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+.color-grid .color-swatch:active { transform: scale(0.9); }
+.color-grid .color-swatch.selected { border-color: var(--primary); }
+.pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.pattern-card {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  position: relative;
+  background: white;
+}
+.pattern-card:active { transform: scale(0.92); }
+.pattern-card.selected { border-color: var(--primary); }
+.pattern-card .pattern-preview {
+  width: 100%;
+  height: 100%;
+}
+.pattern-card .pattern-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(transparent, rgba(0,0,0,0.5));
+  text-align: center;
+}
+.custom-pattern-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px dashed var(--primary-light);
+  background: var(--bg);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.custom-pattern-btn:active { transform: scale(0.98); }
+
+/* Pattern Drawing Modal */
+.pattern-draw-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.pattern-draw-modal.active { display: flex; }
+.pattern-draw-content {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+}
+.pattern-draw-content h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.pattern-draw-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+.pattern-draw-canvas-wrap {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+  position: relative;
+  margin-bottom: 14px;
+}
+#patternDrawCanvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+}
+#patternDrawOverlay {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.pattern-draw-tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.pattern-draw-tools .color-dot { width: 24px; height: 24px; }
+.pattern-draw-tools .opacity-slider-wrap { margin-left: 4px; }
+.pattern-draw-tools .opacity-slider-wrap label { font-size: 9px; }
+.pattern-draw-tools .opacity-slider { width: 28px; }
+.pattern-draw-tools .opacity-value { font-size: 9px; }
+.pattern-draw-actions {
+  display: flex;
+  gap: 10px;
+}
+.pattern-draw-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+.pattern-draw-actions .btn-cancel {
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+.pattern-draw-actions .btn-confirm {
+  background: var(--primary);
+  color: white;
+}
+
+/* Full Page Drawing Modal */
+.full-page-draw-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 999;
+  display: none;
+  flex-direction: column;
+  padding: 12px;
+}
+.full-page-draw-modal.active { display: flex; }
+.full-page-draw-content {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.full-page-draw-content h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.full-page-draw-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.full-page-tools {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.full-page-tools .color-dot { width: 24px; height: 24px; }
+.full-page-tools .tool-btn { width: 32px; height: 32px; font-size: 14px; border-radius: 8px; }
+.full-page-tools .tool-btn.active { background: var(--primary); color: white; }
+.full-page-tools .brush-size-btn { padding: 4px 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--bg); border: none; cursor: pointer; flex-shrink: 0; }
+.full-page-tools .opacity-slider-wrap { margin-left: 4px; }
+.full-page-tools .opacity-slider-wrap label { font-size: 9px; }
+.full-page-tools .opacity-slider { width: 28px; }
+.full-page-tools .opacity-value { font-size: 9px; }
+.full-page-canvas-wrap {
+  flex: 1;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+  position: relative;
+  margin-bottom: 10px;
+  min-height: 200px;
+}
+#fullPageCanvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+}
+#fullPageOverlay {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.full-page-actions {
+  display: flex;
+  gap: 10px;
+}
+.full-page-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+.full-page-actions .btn-cancel {
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+.full-page-actions .btn-confirm {
+  background: var(--primary);
+  color: white;
+}
+
+/* ========== Collection Modal ========== */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 998;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeInOverlay 0.2s ease;
+}
+.modal-overlay.active { display: flex; }
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-sheet {
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  padding: 20px 20px 32px;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-sheet .modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal-sheet h3 {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.modal-sheet .modal-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 18px;
+}
+.modal-collection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.modal-collection-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg);
+}
+.modal-collection-item:active { transform: scale(0.98); }
+.modal-collection-item .icon {
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.modal-collection-item .name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+}
+.modal-collection-item .check {
+  font-size: 18px;
+  color: var(--primary);
+  opacity: 0;
+  transition: var(--transition);
+}
+.modal-collection-item.selected .check { opacity: 1; }
+.modal-collection-item.selected { background: var(--primary-light); background: rgba(124, 58, 237, 0.1); }
+.modal-collection-item.skip {
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  background: transparent;
+}
+
+/* ========== Toast ========== */
+.toast {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(30, 27, 46, 0.92);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  transition: 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ========== Collection View ========== */
+.collection-view-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 10px;
+  background: var(--surface);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+.collection-view-header .btn-back {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--primary);
+}
+.collection-view-header h2 { font-size: 17px; font-weight: 700; flex: 1; }
+.collection-view-header .col-icon { font-size: 24px; }
+
+/* ========== Collection Management ========== */
+.add-collection-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: 80px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  gap: 6px;
+}
+.add-collection-btn:hover { border-color: var(--primary); color: var(--primary); }
+.add-collection-btn:active { transform: scale(0.95); }
+
+.collection-card .rename-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background: rgba(255,255,255,0.8);
+  border: none;
+  border-radius: 50%;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  z-index: 2;
+}
+.collection-card:hover .rename-btn,
+.collection-card:active .rename-btn { opacity: 1; }
+
+.col-manage-modal .icon-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin: 10px 0;
+}
+.col-manage-modal .icon-pick-item {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg);
+}
+.col-manage-modal .icon-pick-item:hover { background: var(--primary-light); }
+.col-manage-modal .icon-pick-item.active { background: rgba(124,58,237,0.15); box-shadow: 0 0 0 2px var(--primary); }
+.col-manage-modal .color-picker-row {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+.col-manage-modal .col-color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+  transition: var(--transition);
+}
+.col-manage-modal .col-color-dot.active { box-shadow: 0 0 0 2px var(--primary); transform: scale(1.1); }
+.col-manage-modal input[type="text"] {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 15px;
+  background: var(--bg);
+  margin: 8px 0;
+  outline: none;
+}
+.col-manage-modal input[type="text"]:focus { border-color: var(--primary); }
+.col-manage-modal .modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.col-manage-modal .modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+/* ========== Redraw Choice Modal ========== */
+.redraw-choice-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.redraw-choice-modal.active { display: flex; }
+.redraw-choice-content {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+  animation: fadeIn 0.2s ease;
+}
+.redraw-choice-content .choice-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+.redraw-choice-content h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.redraw-choice-content p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.redraw-choice-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.redraw-choice-actions button {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.redraw-choice-actions .btn-modify {
+  background: var(--primary);
+  color: white;
+}
+.redraw-choice-actions .btn-modify:active { transform: scale(0.96); }
+.redraw-choice-actions .btn-clear {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.redraw-choice-actions .btn-clear:active { transform: scale(0.96); }
+.redraw-choice-actions .btn-skip {
+  background: transparent;
+  color: var(--text-light);
+  font-size: 12px;
+  padding: 8px;
+}
+
+.col-manage-modal .modal-actions .btn-cancel { background: var(--bg); color: var(--text-secondary); }
+.col-manage-modal .modal-actions .btn-confirm { background: var(--primary); color: white; }
+
+/* ========== Theme Modal ========== */
+.theme-modal-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 998;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.theme-modal-overlay.active { display: flex; }
+.theme-sheet {
+  background: var(--surface); border-radius: 24px 24px 0 0;
+  width: 100%; padding: 20px 20px 32px;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+.theme-card {
+  padding: 16px; border-radius: 14px; cursor: pointer; transition: var(--transition);
+  border: 3px solid var(--border); text-align: center; background: var(--bg);
+}
+.theme-card.selected { border-color: var(--primary); }
+.theme-card:active { transform: scale(0.96); }
+.theme-card .theme-preview {
+  display: flex; gap: 3px; justify-content: center; margin-bottom: 8px;
+}
+.theme-card .theme-swatch {
+  width: 16px; height: 16px; border-radius: 50%;
+}
+.theme-card .theme-name { font-size: 14px; font-weight: 700; color: var(--text); }
+
+/* ========== Image Crop Modal ========== */
+.image-crop-modal {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 999;
+  display: none; flex-direction: column;
+}
+.image-crop-modal.active { display: flex; }
+.image-crop-header {
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+  background: var(--surface); flex-shrink: 0;
+}
+.image-crop-header h3 { font-size: 16px; font-weight: 700; flex: 1; }
+.image-crop-header button {
+  background: none; border: none; font-size: 14px; font-weight: 600;
+  cursor: pointer; padding: 6px 12px; border-radius: 8px;
+}
+.image-crop-header .btn-crop-cancel { color: var(--text-secondary); }
+.image-crop-header .btn-crop-done { background: var(--primary); color: white; }
+.image-crop-body {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.image-crop-body canvas { max-width: 100%; max-height: 100%; touch-action: none; }
+.image-crop-tip {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.7); color: white; padding: 8px 16px;
+  border-radius: 20px; font-size: 12px; pointer-events: none; white-space: nowrap;
+}
+.image-crop-choice {
+  position: absolute; bottom: 20px; left: 0; right: 0;
+  display: none; gap: 12px; padding: 0 16px; justify-content: center;
+}
+.image-crop-choice.active { display: flex; }
+.image-crop-choice button {
+  padding: 10px 24px; border-radius: 20px; border: none;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: var(--surface); color: var(--text);
+  box-shadow: var(--shadow);
+}
+.image-crop-choice button:active { transform: scale(0.95); }
+
+/* ========== Voice Recording ========== */
+.voice-area {
+  padding: 10px 20px 4px; flex-shrink: 0; display: none;
+}
+.voice-area.active { display: block; }
+.voice-player {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: var(--surface); border-radius: 12px; box-shadow: var(--shadow);
+}
+.voice-player .play-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: none;
+  background: var(--primary); color: white; font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: var(--transition);
+}
+.voice-player .play-btn:active { transform: scale(0.9); }
+.voice-player .voice-progress {
+  flex: 1; height: 4px; background: var(--border); border-radius: 2px;
+  position: relative; overflow: hidden;
+}
+.voice-player .voice-progress-fill {
+  height: 100%; background: var(--primary); border-radius: 2px;
+  transition: width 0.1s linear; width: 0%;
+}
+.voice-player .voice-time {
+  font-size: 11px; color: var(--text-secondary); min-width: 32px; text-align: right;
+}
+.voice-player .delete-voice {
+  background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px;
+  color: var(--text-light); transition: var(--transition);
+}
+.voice-recording-indicator {
+  display: none; align-items: center; gap: 8px; padding: 10px 14px;
+  background: #FEE2E2; border-radius: 12px;
+}
+.voice-recording-indicator.active { display: flex; }
+.voice-recording-indicator .rec-dot {
+  width: 12px; height: 12px; border-radius: 50%; background: #EF4444;
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+.voice-recording-indicator .rec-time {
+  font-size: 14px; font-weight: 600; color: #EF4444; font-variant-numeric: tabular-nums;
+}
+.voice-recording-indicator .stop-rec {
+  margin-left: auto; background: #EF4444; color: white; border: none;
+  width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer;
+}
+
+/* ========== Inserted Image Controls ========== */
+.inserted-image-wrapper {
+  position: relative; display: inline-block; max-width: 100%;
+  margin: 8px 0; border-radius: 8px; overflow: visible;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer;
+  resize: both; min-width: 60px; min-height: 60px;
+  user-select: none; -webkit-user-select: none;
+}
+.inserted-image-wrapper img {
+  display: block; max-width: 100%; width: 100%; height: auto;
+  border-radius: 8px; pointer-events: none;
+  transition: transform 0.2s ease;
+}
+.inserted-image-wrapper .img-ctrls {
+  position: absolute; bottom: 6px; right: 6px;
+  display: none; gap: 4px; z-index: 10;
+}
+.inserted-image-wrapper.active .img-ctrls { display: flex; }
+.img-ctrl-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: none; background: rgba(0,0,0,0.55); color: white;
+  font-size: 14px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); transition: 0.15s ease;
+}
+.img-ctrl-btn:active { transform: scale(0.85); background: rgba(0,0,0,0.75); }
+
+/* ========== Responsive images ========== */
+@media (hover: none) and (pointer: coarse) {
+  .inserted-image-wrapper .img-ctrls { display: flex; opacity: 0.7; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="phone-frame">
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <span class="time" id="statusTime">20:23</span>
+  <span class="icons">
+    <span>●●●●</span>
+    <span>📶</span>
+    <span>🔋 85%</span>
+  </span>
+</div>
+
+<!-- ========== Home View ========== -->
+<div id="homeView" class="view active">
+  <div class="home-header">
+    <div class="home-header-left">
+      <button class="sidebar-toggle" onclick="App.toggleSidebar()">☰</button>
+      <div>
+        <div class="home-title">随手记</div>
+        <div class="home-subtitle">记录每一个闪过的念头</div>
+      </div>
+    </div>
+    <button class="theme-btn" onclick="App.showThemeModal()" title="切换主题">🎨</button>
+  </div>
+  <div class="home-body">
+    <!-- Sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="App.closeSidebar()"></div>
+    <!-- Left Sidebar -->
+    <div class="home-sidebar" id="homeSidebar">
+      <div class="sidebar-header">
+        合集 <span style="font-size:11px;color:var(--text-light);font-weight:500;" id="sidebarNoteCount">0</span>
+      </div>
+      <div class="sidebar-col-list" id="sidebarColList"></div>
+      <div class="sidebar-add-col" onclick="App.showAddCollectionModal()">＋ 新建合集</div>
+    </div>
+    <!-- Right Panel -->
+    <div class="home-main">
+      <div class="home-main-header">
+        最近笔记 <span class="count" id="recentCount">0</span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;color:var(--text-light);" id="activeColLabel"></span>
+      </div>
+      <div class="note-list" id="noteList"></div>
+    </div>
+  </div>
+  <button class="fab" onclick="App.openEditor()">+</button>
+</div>
+
+<!-- ========== Collection Detail View ========== -->
+<div id="collectionView" class="view">
+  <div class="collection-view-header">
+    <button class="btn-back" onclick="App.showView('homeView')">‹</button>
+    <span class="col-icon" id="colDetailIcon"></span>
+    <h2 id="colDetailTitle"></h2>
+  </div>
+  <div class="home-content" style="padding-top: 10px;">
+    <div class="note-list" id="colNoteList"></div>
+    <div class="empty-state" id="colEmptyState" style="display:none;">
+      <span class="emoji">📝</span>
+      <p>这个合集还没有笔记</p>
+    </div>
+  </div>
+  <button class="fab" onclick="App.openEditor()">+</button>
+</div>
+
+<!-- ========== Editor View ========== -->
+<div id="editorView" class="view">
+  <div class="editor-header">
+    <button class="btn-back" onclick="App.handleBack()">‹</button>
+    <input type="text" class="title-input" id="noteTitle" placeholder="给这条想法起个名字…" maxlength="30">
+    <button class="btn-save" onclick="App.saveNote()">保存</button>
+  </div>
+  <div class="paper-area" id="paperArea">
+    <div class="paper-container" id="paperContainer">
+      <div class="paper-bg" id="paperBg"></div>
+      <canvas class="draw-canvas" id="drawCanvas"></canvas>
+      <canvas class="draw-canvas-overlay" id="drawCanvasOverlay"></canvas>
+      <div class="text-layer" id="textLayer" contenteditable="true" data-placeholder="写下你的想法，或画点什么…"></div>
+    </div>
+  </div>
+  <!-- Voice Recording Area -->
+  <div class="voice-area" id="voiceArea">
+    <div class="voice-recording-indicator" id="voiceRecIndicator">
+      <span class="rec-dot"></span>
+      <span class="rec-time" id="recTime">00:00</span>
+      <button class="stop-rec" onclick="App.stopVoiceRecord()" title="停止录音">⏹</button>
+    </div>
+    <div class="voice-player" id="voicePlayer" style="display:none;">
+      <button class="play-btn" id="voicePlayBtn" onclick="App.toggleVoicePlayback()">▶️</button>
+      <div class="voice-progress" onclick="App.seekVoice(event)">
+        <div class="voice-progress-fill" id="voiceProgressFill"></div>
+      </div>
+      <span class="voice-time" id="voiceTime">00:00</span>
+      <button class="delete-voice" onclick="App.deleteVoice()" title="删除录音">🗑️</button>
+    </div>
+  </div>
+  <div class="editor-toolbar">
+    <button class="tool-btn active" id="toolText" onclick="App.setMode('text')" title="文字">📝</button>
+    <button class="tool-btn" id="toolDraw" onclick="App.setMode('draw')" title="画笔">✏️</button>
+    <button class="tool-btn" id="toolEraser" onclick="App.setMode('eraser')" title="橡皮">🧽</button>
+    <div class="tool-divider"></div>
+    <div class="color-palette" id="colorPalette"></div>
+    <div class="color-current-preview" id="colorPreview"><div class="fill" id="colorPreviewFill"></div></div>
+    <div class="opacity-slider-wrap">
+      <label>透明</label>
+      <input type="range" class="opacity-slider" id="drawOpacitySlider" min="0" max="100" value="100" oninput="App.setDrawOpacity(this.value)">
+      <span class="opacity-value" id="drawOpacityValue">100%</span>
+    </div>
+    <div class="tool-divider"></div>
+    <button class="brush-size-btn" id="editorBrushBtn" onclick="App.cycleBrushSize()">
+      <span class="dot" id="brushDot"></span>
+    </button>
+    <button class="brush-size-btn" id="editorEraserBtn" onclick="App.cycleEraserSize()" style="display:none;">
+      <span class="dot" id="eraserDot" style="background:#9CA3AF;"></span>
+    </button>
+    <div class="tool-divider"></div>
+    <button class="tool-btn" onclick="App.undoDraw()" title="撤销">↩️</button>
+    <button class="tool-btn" onclick="App.clearDraw()" title="清空画布">🗑️</button>
+    <div class="tool-divider"></div>
+    <button class="tool-btn" onclick="App.openBgPicker()" title="稿纸">🎨</button>
+    <div class="tool-divider"></div>
+    <button class="tool-btn" id="toolImage" onclick="App.triggerImagePaste()" title="贴图片">🖼️</button>
+    <button class="tool-btn" id="toolVoice" onclick="App.toggleVoiceRecord()" title="语音">🎤</button>
+  </div>
+</div>
+
+<!-- ========== Background Picker View ========== -->
+<div id="bgPickerView" class="view">
+  <div class="bg-picker-header">
+    <button class="btn-back" onclick="App.showView('editorView')">‹</button>
+    <h2>选择稿纸</h2>
+  </div>
+  <div class="bg-picker-content">
+    <div class="bg-grid" id="bgGrid"></div>
+  </div>
+</div>
+
+<!-- ========== Custom BG Maker View ========== -->
+<div id="customBgView" class="view">
+  <div class="custom-bg-header">
+    <button class="btn-back" onclick="App.showView('bgPickerView')">‹</button>
+    <h2>自定义背景</h2>
+    <button class="btn-done" onclick="App.applyCustomBg()">完成</button>
+  </div>
+  <div class="custom-bg-content">
+    <div class="custom-bg-preview" id="customBgPreview"></div>
+    
+    <div class="custom-bg-section">
+      <h3>底色</h3>
+      <div class="color-grid" id="bgColorGrid"></div>
+    </div>
+    
+    <div class="custom-bg-section">
+      <h3>图案</h3>
+      <div class="pattern-grid" id="patternGrid"></div>
+    </div>
+    
+    <div class="custom-bg-section">
+      <button class="custom-pattern-btn" onclick="App.openPatternDraw()">✏️ 自己画一个图案</button>
+      <button class="custom-pattern-btn" onclick="App.openFullPageDraw()" style="margin-top: 10px;">📐 自己规划一整页</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Collection Modal ========== -->
+<div class="modal-overlay" id="collectionModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3>归类到合集</h3>
+    <p class="modal-desc">选择一个合集，或跳过稍后再分</p>
+    <div class="modal-collection-list" id="modalCollectionList"></div>
+  </div>
+</div>
+
+<!-- ========== Collection Manage Modal ========== -->
+<div class="modal-overlay" id="colManageModal">
+  <div class="modal-sheet col-manage-modal">
+    <div class="modal-handle"></div>
+    <h3 id="colManageTitle">添加合集</h3>
+    <p class="modal-desc" id="colManageDesc">给合集起个名字，选个图标</p>
+    <input type="text" id="colNameInput" placeholder="输入合集名称…" maxlength="12">
+    <div class="icon-picker" id="colIconPicker"></div>
+    <div class="color-picker-row" id="colColorPicker"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="App.closeColManageModal()">取消</button>
+      <button class="btn-confirm" onclick="App.confirmColManage()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Redraw Choice Modal ========== -->
+<div class="redraw-choice-modal" id="redrawChoiceModal">
+  <div class="redraw-choice-content">
+    <div class="choice-icon">🎨</div>
+    <h3>重新编辑背景画</h3>
+    <p id="redrawChoiceDesc">检测到你之前已经画过，你想怎么继续？</p>
+    <div class="redraw-choice-actions">
+      <button class="btn-modify" onclick="App.redrawModify()">✏️ 在原来的基础上修改</button>
+      <button class="btn-clear" onclick="App.redrawClear()">🗑️ 清除重画</button>
+      <button class="btn-skip" onclick="App.redrawSkip()">取消，不进入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Pattern Draw Modal ========== -->
+<div class="pattern-draw-modal" id="patternDrawModal">
+  <div class="pattern-draw-content">
+    <h3>画一个图案</h3>
+    <p>画一个小图案，它会平铺铺满整张稿纸</p>
+    <div class="pattern-draw-tools">
+      <div class="color-palette" id="patternColorPalette"></div>
+      <div class="opacity-slider-wrap">
+        <label>透明</label>
+        <input type="range" class="opacity-slider" id="patternOpacitySlider" min="0" max="100" value="100" oninput="App.setPatternOpacity(this.value)">
+        <span class="opacity-value" id="patternOpacityValue">100%</span>
+      </div>
+      <button class="tool-btn" id="patternEraserBtn" style="width:32px;height:32px;font-size:14px;" onclick="App.togglePatternEraser()" title="橡皮">🧽</button>
+      <button class="brush-size-btn" id="patternBrushSizeBtn" onclick="App.cyclePatternBrush()">
+        <span class="dot" id="patternBrushDot"></span>
+      </button>
+      <button class="brush-size-btn" id="patternEraserSizeBtn" onclick="App.cyclePatternEraser()" style="display:none;">
+        <span class="dot" id="patternEraserDot" style="background:#9CA3AF;"></span>
+      </button>
+      <button class="tool-btn" style="width:32px;height:32px;font-size:14px;" onclick="App.undoPatternDraw()" title="撤回">↩️</button>
+      <button class="tool-btn" style="width:32px;height:32px;font-size:14px;" onclick="App.clearPatternCanvas()">🗑️</button>
+    </div>
+    <div class="pattern-draw-canvas-wrap">
+      <canvas id="patternDrawCanvas" width="300" height="300"></canvas>
+      <canvas id="patternDrawOverlay" width="300" height="300"></canvas>
+    </div>
+    <div class="pattern-draw-actions">
+      <button class="btn-cancel" onclick="App.closePatternDraw()">取消</button>
+      <button class="btn-confirm" onclick="App.confirmPatternDraw()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Full Page Draw Modal ========== -->
+<div class="full-page-draw-modal" id="fullPageDrawModal">
+  <div class="full-page-draw-content">
+    <h3>规划一整页</h3>
+    <p>画出整张稿纸的背景，铺满一整页</p>
+    <div class="full-page-tools">
+      <div class="color-palette" id="fullPageColorPalette"></div>
+      <div class="opacity-slider-wrap">
+        <label>透明</label>
+        <input type="range" class="opacity-slider" id="fpOpacitySlider" min="0" max="100" value="100" oninput="App.setFullPageOpacity(this.value)">
+        <span class="opacity-value" id="fpOpacityValue">100%</span>
+      </div>
+      <button class="tool-btn" id="fpEraserBtn" onclick="App.toggleFullPageEraser()" title="橡皮">🧽</button>
+      <button class="brush-size-btn" id="fpBrushSizeBtn" onclick="App.cycleFullPageBrush()">
+        <span class="dot" id="fpBrushDot"></span>
+      </button>
+      <button class="brush-size-btn" id="fpEraserSizeBtn" onclick="App.cycleFullPageEraser()" style="display:none;">
+        <span class="dot" id="fpEraserDot" style="background:#9CA3AF;"></span>
+      </button>
+      <button class="tool-btn" onclick="App.fillFullPageCanvas()" title="填充底色">🎨</button>
+      <button class="tool-btn" onclick="App.undoFullPageDraw()" title="撤回">↩️</button>
+      <button class="tool-btn" onclick="App.clearFullPageCanvas()" title="清空">🗑️</button>
+    </div>
+    <div class="full-page-canvas-wrap">
+      <canvas id="fullPageCanvas" width="360" height="540"></canvas>
+      <canvas id="fullPageOverlay" width="360" height="540"></canvas>
+    </div>
+    <div class="full-page-actions">
+      <button class="btn-cancel" onclick="App.closeFullPageDraw()">取消</button>
+      <button class="btn-confirm" onclick="App.confirmFullPageDraw()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Theme Modal ========== -->
+<div class="theme-modal-overlay" id="themeModal">
+  <div class="theme-sheet">
+    <div class="modal-handle"></div>
+    <h3>选择主题</h3>
+    <p class="modal-desc">选一个你喜欢的配色风格</p>
+    <div class="theme-grid" id="themeGrid"></div>
+  </div>
+</div>
+
+<!-- ========== Image Crop Modal ========== -->
+<div class="image-crop-modal" id="imageCropModal">
+  <div class="image-crop-header">
+    <button class="btn-crop-cancel" onclick="App.cancelImageCrop()">取消</button>
+    <h3>自由剪裁</h3>
+    <button class="btn-crop-done" onclick="App.confirmImageCrop()">完成</button>
+  </div>
+  <div class="image-crop-body" id="imageCropBody">
+    <canvas id="imageCropCanvas"></canvas>
+    <div class="image-crop-tip" id="imageCropTip">👆 用手指画出闭合的剪裁区域</div>
+    <div class="image-crop-choice" id="imageCropChoice">
+      <button onclick="App.cropSelect('inside')">保留圈内</button>
+      <button onclick="App.cropSelect('outside')">保留圈外</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input for image paste -->
+<input type="file" id="imageFileInput" accept="image/*" style="display:none" onchange="App.handleImageFile(event)">
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+</div>
+</div>
+
+<script>
+// ========== Data Model ==========
+const App = {
+  state: {
+    currentView: 'homeView',
+    currentNote: null,
+    mode: 'text',
+    drawColor: '#1E1B2E',
+    drawOpacity: 1.0,
+    brushSize: 3,
+    brushSizes: [2, 4, 8, 14],
+    brushIndex: 1,
+    eraserSizes: [10, 20, 40, 60],
+    eraserIndex: 1,
+    isDrawing: false,
+    lastX: 0,
+    lastY: 0,
+    drawHistory: [],
+    maxHistory: 30,
+    pendingCollection: null,
+    currentCollectionId: null,
+    activeSidebarCol: null,
+    customBg: {
+      color: '#FFF8E7',
+      pattern: null,
+      customPatternImage: null,
+    },
+    patternDrawColor: '#7C3AED',
+    patternDrawOpacity: 1.0,
+    patternDrawMode: 'draw',
+    patternDrawBrushIndex: 1,
+    patternDrawBrushSizes: [2, 4, 8, 14],
+    patternDrawing: false,
+    patternLastX: 0,
+    patternLastY: 0,
+    patternDrawHistory: [],
+    patternEraserSizes: [10, 20, 40, 60],
+    patternEraserIndex: 1,
+    // Full page draw
+    fullPageDrawColor: '#7C3AED',
+    fullPageDrawOpacity: 1.0,
+    fullPageBrushIndex: 1,
+    fullPageBrushSizes: [2, 4, 8, 14],
+    fullPageEraserSizes: [10, 20, 40, 60],
+    fullPageEraserIndex: 1,
+    fullPageMode: 'draw',
+    fullPageDrawing: false,
+    fullPageLastX: 0,
+    fullPageLastY: 0,
+    fullPageDrawHistory: [],
+    // Theme
+    theme: 'default',
+    // Image crop
+    cropImage: null,
+    cropLasso: [],
+    cropLoopClosed: false,
+    // Voice
+    mediaRecorder: null,
+    voiceChunks: [],
+    voiceDataUrl: null,
+    voicePlaying: false,
+    voiceAudio: null,
+    voiceTimer: null,
+  },
+
+  defaultCollections: [
+    { id: 'uncategorized', name: '未分类', icon: '📦', color: '#9CA3AF' },
+    { id: 'interview', name: '面试', icon: '💼', color: '#3B82F6' },
+    { id: 'inspiration', name: '灵感', icon: '💡', color: '#F59E0B' },
+    { id: 'thoughts', name: '随想', icon: '🌙', color: '#8B5CF6' },
+    { id: 'work', name: '工作计划', icon: '📋', color: '#10B981' },
+    { id: 'travel', name: '游玩计划', icon: '🎒', color: '#EC4899' },
+  ],
+
+  collections: [],
+
+  collectionIcons: ['💼','💡','🌙','✨','📋','🎒','❤️','🔥','🎯','📝','📌','🎉','🌟','🏆','📚','🎵','🏠','☕','🌈','💪','🧠','👀','💬','🪄','✍️','⚡','🍀','🎨','🛠️','📖','🌍','🧩'],
+
+  collectionColors: ['#3B82F6','#F59E0B','#8B5CF6','#6B7280','#10B981','#EC4899','#EF4444','#F97316','#14B8A6','#0EA5E9','#6366F1','#A855F7','#D946EF','#E11D48','#84CC16','#22D3EE','#78716C','#475569'],
+
+  colors: ['#1E1B2E', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#FFFFFF'],
+
+  bgColors: ['#FFFFFF', '#FFF8E7', '#F0FDF4', '#EFF6FF', '#FDF2F8', '#F5F3FF', '#FEF3C7', '#FEE2E2', '#E0F2FE', '#F3E8FF', '#FFFBEB', '#F1F5F9'],
+
+  // ========== Background Presets ==========
+  presets: [],
+
+  initPresets() {
+    const svgNS = 'http://www.w3.org/2000/svg';
+    
+    // Helper to make SVG data URI
+    const svgBg = (svg, bgColor) => {
+      const fullSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">${bgColor ? `<rect width="40" height="40" fill="${bgColor}"/>` : ''}${svg}</svg>`;
+      return `url("data:image/svg+xml,${encodeURIComponent(fullSvg)}")`;
+    };
+
+    this.presets = [
+      {
+        id: 'blank', name: '空白纸',
+        bg: '#FFFFFF',
+        previewBg: '#FFFFFF',
+      },
+      {
+        id: 'lined', name: '横线纸',
+        bg: svgBg('<line x1="0" y1="32" x2="40" y2="32" stroke="#CBD5E1" stroke-width="0.8"/>', '#FFFFFF'),
+        previewBg: svgBg('<line x1="0" y1="32" x2="40" y2="32" stroke="#CBD5E1" stroke-width="0.8"/>', '#FFFFFF'),
+      },
+      {
+        id: 'grid', name: '方格纸',
+        bg: svgBg('<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#D1D5DB" stroke-width="0.6"/>', '#FFFFFF'),
+        previewBg: svgBg('<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#D1D5DB" stroke-width="0.6"/>', '#FFFFFF'),
+      },
+      {
+        id: 'dotted', name: '点阵纸',
+        bg: svgBg('<circle cx="20" cy="20" r="1.2" fill="#D1D5DB"/>', '#FFFFFF'),
+        previewBg: svgBg('<circle cx="20" cy="20" r="1.2" fill="#D1D5DB"/>', '#FFFFFF'),
+      },
+      {
+        id: 'tianzi', name: '田字格',
+        bg: svgBg('<rect x="2" y="2" width="36" height="36" fill="none" stroke="#FCA5A5" stroke-width="1"/><line x1="20" y1="2" x2="20" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="2" y1="20" x2="38" y2="20" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/>', '#FFFBEB'),
+        previewBg: svgBg('<rect x="2" y="2" width="36" height="36" fill="none" stroke="#FCA5A5" stroke-width="1"/><line x1="20" y1="2" x2="20" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="2" y1="20" x2="38" y2="20" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/>', '#FFFBEB'),
+      },
+      {
+        id: 'mizi', name: '米字格',
+        bg: svgBg('<rect x="2" y="2" width="36" height="36" fill="none" stroke="#FCA5A5" stroke-width="1"/><line x1="20" y1="2" x2="20" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="2" y1="20" x2="38" y2="20" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="2" y1="2" x2="38" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="38" y1="2" x2="2" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/>', '#FFFBEB'),
+        previewBg: svgBg('<rect x="2" y="2" width="36" height="36" fill="none" stroke="#FCA5A5" stroke-width="1"/><line x1="20" y1="2" x2="20" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="2" y1="20" x2="38" y2="20" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="2" y1="2" x2="38" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/><line x1="38" y1="2" x2="2" y2="38" stroke="#FCA5A5" stroke-width="0.5" stroke-dasharray="3,2"/>', '#FFFBEB'),
+      },
+      {
+        id: 'kraft', name: '牛皮纸',
+        bg: '#D4B896',
+        previewBg: '#D4B896',
+        extraStyle: 'background-image: radial-gradient(circle at 20% 30%, rgba(139,90,43,0.08) 0%, transparent 50%), radial-gradient(circle at 70% 60%, rgba(139,90,43,0.06) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(139,90,43,0.05) 0%, transparent 40%);',
+      },
+      {
+        id: 'vintage', name: '复古纸',
+        bg: '#F5E6C8',
+        previewBg: '#F5E6C8',
+        extraStyle: 'background-image: radial-gradient(ellipse at 30% 20%, rgba(180,130,60,0.1) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(140,100,40,0.08) 0%, transparent 40%);',
+      },
+      {
+        id: 'letter', name: '信纸',
+        bg: svgBg('<line x1="0" y1="32" x2="40" y2="32" stroke="#BFDBFE" stroke-width="0.6"/><line x1="12" y1="0" x2="12" y2="40" stroke="#FCA5A5" stroke-width="0.8"/>', '#FFFBF0'),
+        previewBg: svgBg('<line x1="0" y1="32" x2="40" y2="32" stroke="#BFDBFE" stroke-width="0.6"/><line x1="12" y1="0" x2="12" y2="40" stroke="#FCA5A5" stroke-width="0.8"/>', '#FFFBF0'),
+      },
+      {
+        id: 'dark', name: '纯黑',
+        bg: '#111111',
+        previewBg: '#111111',
+        textColor: '#E4E4E7',
+      },
+      {
+        id: 'mint', name: '薄荷绿',
+        bg: svgBg('<circle cx="20" cy="20" r="1" fill="#A7F3D0"/>', '#F0FDF4'),
+        previewBg: svgBg('<circle cx="20" cy="20" r="1" fill="#A7F3D0"/>', '#F0FDF4'),
+      },
+      {
+        id: 'rose', name: '玫瑰粉',
+        bg: svgBg('<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#FBCFE8" stroke-width="0.6"/>', '#FDF2F8'),
+        previewBg: svgBg('<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#FBCFE8" stroke-width="0.6"/>', '#FDF2F8'),
+      },
+    ];
+  },
+
+  // ========== Patterns for custom BG ==========
+  patterns: [],
+
+  initPatterns() {
+    const svgBg = (svg, color = '#CCCCCC') => {
+      const fullSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><rect width="60" height="60" fill="transparent"/>${svg.replace(/\{color\}/g, color)}</svg>`;
+      return `url("data:image/svg+xml,${encodeURIComponent(fullSvg)}")`;
+    };
+
+    this.patterns = [
+      { id: 'none', name: '无图案', svg: '' },
+      { id: 'dots', name: '波点', svg: '<circle cx="30" cy="30" r="4" fill="{color}"/>' },
+      { id: 'stripes', name: '条纹', svg: '<rect x="0" y="28" width="60" height="4" fill="{color}"/>' },
+      { id: 'grid', name: '网格', svg: '<path d="M 60 0 L 0 0 0 60" fill="none" stroke="{color}" stroke-width="1.5"/>' },
+      { id: 'diagonal', name: '斜纹', svg: '<path d="M 0 60 L 60 0" stroke="{color}" stroke-width="2" fill="none"/><path d="M 0 0 L 0 0" stroke="{color}" stroke-width="2" fill="none"/>' },
+      { id: 'waves', name: '波浪', svg: '<path d="M 0 30 Q 15 15, 30 30 T 60 30" stroke="{color}" stroke-width="2" fill="none"/>' },
+      { id: 'stars', name: '星星', svg: '<text x="30" y="35" font-size="18" text-anchor="middle" fill="{color}">★</text>' },
+      { id: 'checker', name: '棋盘', svg: '<rect x="0" y="0" width="30" height="30" fill="{color}" opacity="0.3"/><rect x="30" y="30" width="30" height="30" fill="{color}" opacity="0.3"/>' },
+      { id: 'triangles', name: '三角', svg: '<polygon points="30,10 50,45 10,45" fill="none" stroke="{color}" stroke-width="1.5"/>' },
+      { id: 'hearts', name: '爱心', svg: '<text x="30" y="36" font-size="16" text-anchor="middle" fill="{color}">♥</text>' },
+      { id: 'cross', name: '十字', svg: '<path d="M 30 15 L 30 45 M 15 30 L 45 30" stroke="{color}" stroke-width="2" stroke-linecap="round"/>' },
+      { id: 'circles', name: '圆环', svg: '<circle cx="30" cy="30" r="12" fill="none" stroke="{color}" stroke-width="1.5"/>' },
+    ];
+  },
+
+  // ========== Storage ==========
+  getNotes() {
+    try { return JSON.parse(localStorage.getItem('suiShouJi_notes') || '[]'); }
+    catch { return []; }
+  },
+  saveNotes(notes) {
+    localStorage.setItem('suiShouJi_notes', JSON.stringify(notes));
+  },
+
+  getCollections() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('suiShouJi_collections') || 'null');
+      if (saved && saved.length > 0) return saved;
+    } catch {}
+    return this.defaultCollections;
+  },
+  saveCollections(cols) {
+    localStorage.setItem('suiShouJi_collections', JSON.stringify(cols));
+  },
+
+  // ========== Init ==========
+  init() {
+    this.collections = this.getCollections();
+    this.initPresets();
+    this.initPatterns();
+    this.renderColorPalette();
+    this.renderBgColors();
+    this.renderPatterns();
+    this.loadTheme();
+    this.renderHome();
+    this.updateStatusTime();
+    setInterval(() => this.updateStatusTime(), 30000);
+    this.initDrawCanvas();
+    this.initPatternCanvas();
+    this.initFullPageCanvas();
+    this.initImageCropCanvas();
+    this.updateBrushDot();
+    this.updateEraserDot();
+    this.initPasteHandler();
+    this.initImageControlHandler();
+    this.initSwipeToDelete();
+  },
+
+  initImageControlHandler() {
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.img-ctrl-btn');
+      if (!btn) {
+        // If clicking outside, deactivate all image controls
+        if (!e.target.closest('.inserted-image-wrapper')) {
+          document.querySelectorAll('.inserted-image-wrapper.active').forEach(w => w.classList.remove('active'));
+        }
+        return;
+      }
+      e.preventDefault();
+      const wrapper = btn.closest('.inserted-image-wrapper');
+      const img = wrapper.querySelector('img');
+      const action = btn.dataset.action;
+      let rotate = parseFloat(wrapper.dataset.rotate) || 0;
+      let w = wrapper.offsetWidth;
+
+      if (action === 'rotl') {
+        rotate -= 90;
+        wrapper.dataset.rotate = rotate;
+        img.style.transform = `rotate(${rotate}deg)`;
+      } else if (action === 'rotr') {
+        rotate += 90;
+        wrapper.dataset.rotate = rotate;
+        img.style.transform = `rotate(${rotate}deg)`;
+      } else if (action === 'shrink') {
+        w = Math.max(80, w * 0.7);
+        wrapper.style.width = w + 'px';
+      } else if (action === 'grow') {
+        w = Math.min(400, w * 1.4);
+        wrapper.style.width = w + 'px';
+      }
+    });
+
+    // Toggle controls on image tap
+    document.addEventListener('click', (e) => {
+      const wrapper = e.target.closest('.inserted-image-wrapper');
+      if (!wrapper) return;
+      if (e.target.closest('.img-ctrl-btn')) return; // Let btn handler deal with it
+      document.querySelectorAll('.inserted-image-wrapper.active').forEach(w => {
+        if (w !== wrapper) w.classList.remove('active');
+      });
+      wrapper.classList.toggle('active');
+    });
+  },
+
+  initPasteHandler() {
+    document.addEventListener('paste', (e) => {
+      if (this.state.currentView !== 'editorView') return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            this.openImageCrop(ev.target.result);
+          };
+          reader.readAsDataURL(blob);
+          return;
+        }
+      }
+    });
+  },
+
+  updateStatusTime() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('statusTime').textContent = `${h}:${m}`;
+  },
+
+  // ========== Navigation ==========
+  showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    this.state.currentView = viewId;
+  },
+
+  // ========== Home Render ==========
+  renderHome() {
+    const notes = this.getNotes();
+
+    // Sidebar collections
+    const activeCol = this.state.activeSidebarCol || null;
+    const sidebarList = document.getElementById('sidebarColList');
+    sidebarList.innerHTML = this.collections.map(col => {
+      const count = notes.filter(n => n.collection === col.id).length;
+      return `
+        <div class="sidebar-col-item ${col.id === activeCol ? 'active' : ''}" onclick="App.filterByCollection('${col.id}')" oncontextmenu="event.preventDefault(); App.showRenameCollectionModal('${col.id}')">
+          <span class="col-bar" style="background:${col.color}"></span>
+          <span class="col-icon">${col.icon}</span>
+          <span class="col-name">${col.name}</span>
+          <span class="col-count">${count}</span>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('sidebarNoteCount').textContent = notes.length;
+
+    // Notes list
+    const list = document.getElementById('noteList');
+    let filtered = [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
+    if (activeCol) {
+      filtered = filtered.filter(n => n.collection === activeCol);
+    }
+    const recent = filtered.slice(0, 50);
+    document.getElementById('recentCount').textContent = filtered.length;
+    const activeColLabel = document.getElementById('activeColLabel');
+    if (activeCol) {
+      const col = this.collections.find(c => c.id === activeCol);
+      activeColLabel.textContent = col ? '▸ ' + col.name : '';
+    } else {
+      activeColLabel.textContent = '';
+    }
+
+    if (recent.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <span class="emoji">✨</span>
+          <p>${activeCol ? '这个合集还没有笔记' : '还没有笔记，点右下角 + 开始记录吧'}</p>
+        </div>
+      `;
+    } else {
+      list.innerHTML = recent.map(n => this.renderNoteItem(n)).join('');
+    }
+  },
+
+  toggleSidebar() {
+    const sidebar = document.getElementById('homeSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const isOpen = sidebar.classList.contains('open');
+    if (isOpen) {
+      this.closeSidebar();
+    } else {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+    }
+  },
+
+  closeSidebar() {
+    document.getElementById('homeSidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  },
+
+  filterByCollection(colId) {
+    if (this.state.activeSidebarCol === colId) {
+      this.state.activeSidebarCol = null;
+    } else {
+      this.state.activeSidebarCol = colId;
+    }
+    this.closeSidebar();
+    this.renderHome();
+  },
+
+  // ========== Swipe-to-Delete ==========
+  swipeWidth: 76, // 与 CSS 中 .note-delete-btn 宽度一致
+
+  initSwipeToDelete() {
+    ['noteList', 'colNoteList'].forEach(id => {
+      const list = document.getElementById(id);
+      if (!list) return;
+      list.addEventListener('pointerdown', (e) => this.swipeStart(e));
+      list.addEventListener('pointermove', (e) => this.swipeMove(e));
+      list.addEventListener('pointerup', (e) => this.swipeEnd(e));
+      list.addEventListener('pointercancel', (e) => this.swipeEnd(e));
+      list.addEventListener('scroll', () => this.closeAllSwipes(), { passive: true });
+    });
+  },
+
+  swipeStart(e) {
+    const wrap = e.target.closest('.note-swipe');
+    if (!wrap || e.target.closest('.note-delete-btn')) return;
+    // 打开新的滑动项时，收起其他已打开的项
+    this.closeAllSwipes(wrap);
+    this.state.swipe = {
+      wrap,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseX: this.getSwipeX(wrap),
+      horizontal: null,
+    };
+    wrap.classList.add('dragging');
+  },
+
+  swipeMove(e) {
+    const s = this.state.swipe;
+    if (!s) return;
+    const dx = e.clientX - s.startX;
+    const dy = e.clientY - s.startY;
+    if (s.horizontal === null) {
+      // 移动超过阈值前不判断方向，避免与点击冲突
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      s.horizontal = Math.abs(dx) > Math.abs(dy);
+      if (!s.horizontal) { this.swipeEnd(e); return; } // 垂直滚动交给浏览器
+      if (s.wrap.setPointerCapture) {
+        try { s.wrap.setPointerCapture(e.pointerId); } catch {}
+      }
+    }
+    if (!s.horizontal) return;
+    e.preventDefault();
+    const x = Math.max(-this.swipeWidth, Math.min(0, s.baseX + dx));
+    this.setSwipeX(s.wrap, x);
+  },
+
+  swipeEnd(e) {
+    const s = this.state.swipe;
+    if (!s) return;
+    s.wrap.classList.remove('dragging');
+    if (s.horizontal) {
+      // 松手后吸附：滑过一半则展开，否则回弹
+      const open = this.getSwipeX(s.wrap) < -this.swipeWidth / 2;
+      this.setSwipeX(s.wrap, open ? -this.swipeWidth : 0);
+      s.wrap.classList.toggle('open', open);
+      // 吞掉本次手势产生的 click，避免误触编辑/删除
+      const block = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+      s.wrap.addEventListener('click', block, { capture: true, once: true });
+    }
+    this.state.swipe = null;
+  },
+
+  setSwipeX(wrap, x) {
+    wrap.style.setProperty('--swipe-x', x + 'px');
+  },
+
+  getSwipeX(wrap) {
+    return parseFloat(wrap.style.getPropertyValue('--swipe-x')) || 0;
+  },
+
+  closeAllSwipes(except) {
+    document.querySelectorAll('.note-swipe.open').forEach(w => {
+      if (w === except) return;
+      w.classList.remove('open');
+      this.setSwipeX(w, 0);
+    });
+  },
+
+  deleteNoteById(noteId) {
+    const notes = this.getNotes().filter(n => n.id !== noteId);
+    this.saveNotes(notes);
+    // 如果正在编辑的就是这条笔记，返回首页
+    if (this.state.currentNote && this.state.currentNote.id === noteId) {
+      this.state.currentNote = null;
+      this.showView('homeView');
+    }
+    // 在合集详情页删除时，同步刷新当前列表
+    if (this.state.currentView === 'collectionView' && this.state.currentCollectionId) {
+      this.openCollection(this.state.currentCollectionId);
+    }
+    this.renderHome();
+    this.toast('🗑️ 笔记已删除');
+  },
+
+  renderNoteItem(n) {
+    const col = this.collections.find(c => c.id === n.collection);
+    const date = new Date(n.updatedAt || n.createdAt);
+    const dateStr = `${date.getMonth()+1}月${date.getDate()}日 ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    const previewText = (n.text || '').replace(/<[^>]*>/g, '').substring(0, 40) || '空白笔记';
+    const hasDrawing = n.drawingData ? '🎨 ' : '';
+    const hasVoice = n.voiceData ? '🎙️ ' : '';
+    return `
+      <div class="note-swipe" data-id="${n.id}">
+        <button class="note-delete-btn" onclick="App.deleteNoteById('${n.id}')" title="删除笔记">
+          <span>🗑️</span>删除
+        </button>
+        <div class="note-item" onclick="App.editNote('${n.id}')">
+          <div class="note-preview" style="background:${this.getNotePreviewBg(n)}">
+            ${n.drawingData ? '🎨' : n.voiceData ? '🎙️' : (col ? col.icon : '📝')}
+          </div>
+          <div class="note-info">
+            <div class="note-title">${n.title || '无标题'}</div>
+            <div class="note-text-preview">${hasDrawing}${hasVoice}${previewText}</div>
+            <div class="note-meta">
+              <span>${dateStr}</span>
+              ${col ? `<span class="note-tag" style="background:${col.color}22;color:${col.color}">${col.name}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  getNotePreviewBg(n) {
+    if (n.background) {
+      if (n.background.type === 'preset') {
+        const p = this.presets.find(p => p.id === n.background.presetId);
+        if (p) return p.previewBg || p.bg || '#FFF';
+      } else if (n.background.type === 'custom') {
+        return n.background.color || '#FFF';
+      }
+    }
+    return '#F5F3FF';
+  },
+
+  // ========== Collection View ==========
+  openCollection(colId) {
+    const col = this.collections.find(c => c.id === colId);
+    if (!col) return;
+    this.state.currentCollectionId = colId;
+    document.getElementById('colDetailIcon').textContent = col.icon;
+    document.getElementById('colDetailTitle').textContent = col.name;
+    
+    const notes = this.getNotes().filter(n => n.collection === colId).sort((a,b) => b.updatedAt - a.updatedAt);
+    const list = document.getElementById('colNoteList');
+    const empty = document.getElementById('colEmptyState');
+    
+    if (notes.length === 0) {
+      list.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      list.innerHTML = notes.map(n => this.renderNoteItem(n)).join('');
+    }
+    this.showView('collectionView');
+  },
+
+  // ========== Editor ==========
+  openEditor() {
+    this.state.currentNote = null;
+    this.state.drawHistory = [];
+    this.clearVoiceState();
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('textLayer').innerHTML = '';
+    this.setMode('text');
+    // Default background
+    this.state.currentBg = { type: 'preset', presetId: 'blank' };
+    this.applyBackground();
+    this.clearDrawCanvas();
+    this.showView('editorView');
+    setTimeout(() => this.resizeCanvas(), 100);
+  },
+
+  editNote(noteId) {
+    // 如果该项正处于左滑展开状态，点击只收起，不进入编辑
+    const openWrap = document.querySelector(`.note-swipe.open[data-id="${noteId}"]`);
+    if (openWrap) {
+      this.closeAllSwipes();
+      return;
+    }
+    const note = this.getNotes().find(n => n.id === noteId);
+    if (!note) return;
+    this.state.currentNote = note;
+    this.state.drawHistory = [];
+    this.clearVoiceState();
+    document.getElementById('noteTitle').value = note.title || '';
+    document.getElementById('textLayer').innerHTML = note.text || '';
+    this.state.currentBg = note.background || { type: 'preset', presetId: 'blank' };
+    this.applyBackground();
+    this.setMode('text');
+    this.showView('editorView');
+    setTimeout(() => {
+      this.resizeCanvas();
+      if (note.drawingData) {
+        this.loadDrawing(note.drawingData);
+      }
+      if (note.voiceData) {
+        this.loadVoiceData(note.voiceData);
+      }
+    }, 200);
+  },
+
+  handleBack() {
+    // Auto-save before going back
+    const title = document.getElementById('noteTitle').value.trim();
+    const text = document.getElementById('textLayer').innerHTML.trim();
+    const hasDrawing = this.hasDrawing();
+    
+    if (title || text || hasDrawing) {
+      this.saveNote(true); // silent save
+    }
+    if (this.state.currentCollectionId) {
+      this.openCollection(this.state.currentCollectionId);
+    } else {
+      this.renderHome();
+      this.showView('homeView');
+    }
+  },
+
+  setMode(mode) {
+    this.state.mode = mode;
+    const textLayer = document.getElementById('textLayer');
+    const canvas = document.getElementById('drawCanvas');
+    
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    
+    // Show/hide brush vs eraser size buttons
+    const brushBtn = document.getElementById('editorBrushBtn');
+    const eraserBtn = document.getElementById('editorEraserBtn');
+    
+    if (mode === 'text') {
+      textLayer.style.pointerEvents = 'auto';
+      canvas.style.pointerEvents = 'none';
+      document.getElementById('toolText').classList.add('active');
+      brushBtn.style.display = '';
+      eraserBtn.style.display = 'none';
+    } else if (mode === 'draw') {
+      textLayer.style.pointerEvents = 'none';
+      canvas.style.pointerEvents = 'auto';
+      document.getElementById('toolDraw').classList.add('active');
+      brushBtn.style.display = '';
+      eraserBtn.style.display = 'none';
+    } else if (mode === 'eraser') {
+      textLayer.style.pointerEvents = 'none';
+      canvas.style.pointerEvents = 'auto';
+      document.getElementById('toolEraser').classList.add('active');
+      brushBtn.style.display = 'none';
+      eraserBtn.style.display = '';
+    }
+    this.updateBrushDot();
+    this.updateEraserDot();
+  },
+
+  // ========== Drawing Canvas ==========
+  initDrawCanvas() {
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('drawCanvasOverlay');
+    const overlayCtx = overlay.getContext('2d');
+    
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const touch = e.touches ? e.touches[0] : e;
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY,
+      };
+    };
+
+    const startDraw = (e) => {
+      if (this.state.mode !== 'draw' && this.state.mode !== 'eraser') return;
+      e.preventDefault();
+      this.state.isDrawing = true;
+      const pos = getPos(e);
+      this.state.lastX = pos.x;
+      this.state.lastY = pos.y;
+      // Save state for undo
+      this.saveDrawState();
+      // Prepare overlay for transparent strokes
+      if (this.state.mode === 'draw') {
+        overlay.width = canvas.width;
+        overlay.height = canvas.height;
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlay.style.opacity = this.state.drawOpacity;
+        overlay.style.pointerEvents = 'none';
+      }
+    };
+
+    const draw = (e) => {
+      if (!this.state.isDrawing) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      
+      if (this.state.mode === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = this.state.eraserSizes[this.state.eraserIndex];
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(this.state.lastX, this.state.lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
+      } else {
+        // Draw on overlay at full opacity - CSS opacity handles transparency
+        overlayCtx.globalCompositeOperation = 'source-over';
+        overlayCtx.lineJoin = 'round';
+        overlayCtx.lineCap = 'round';
+        overlayCtx.lineWidth = this.state.brushSizes[this.state.brushIndex];
+        overlayCtx.strokeStyle = this.state.drawColor;
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(this.state.lastX, this.state.lastY);
+        overlayCtx.lineTo(pos.x, pos.y);
+        overlayCtx.stroke();
+      }
+      
+      this.state.lastX = pos.x;
+      this.state.lastY = pos.y;
+    };
+
+    const endDraw = () => {
+      if (this.state.isDrawing && this.state.mode === 'draw') {
+        // Composite overlay onto main canvas with proper opacity
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = this.state.drawOpacity;
+        ctx.drawImage(overlay, 0, 0);
+        ctx.globalAlpha = 1.0;
+        // Clear overlay
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlay.style.opacity = 0;
+      }
+      this.state.isDrawing = false;
+    };
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+  },
+
+  resizeCanvas() {
+    const canvas = document.getElementById('drawCanvas');
+    const container = document.getElementById('paperContainer');
+    const rect = container.getBoundingClientRect();
+    const w = rect.width;
+    const h = Math.max(rect.height, container.parentElement.clientHeight);
+    
+    // Save existing drawing
+    let existingData = null;
+    if (canvas.width > 0 && canvas.height > 0) {
+      try { existingData = canvas.toDataURL(); } catch {}
+    }
+    
+    canvas.width = w;
+    canvas.height = h;
+    
+    // Resize overlay canvas too
+    const overlay = document.getElementById('drawCanvasOverlay');
+    overlay.width = w;
+    overlay.height = h;
+    overlay.style.opacity = 0;
+    
+    if (existingData) {
+      const img = new Image();
+      img.onload = () => {
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+      };
+      img.src = existingData;
+    }
+  },
+
+  clearDrawCanvas() {
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  },
+
+  hasDrawing() {
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    try {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      return imageData.data.some(channel => channel !== 0);
+    } catch { return false; }
+  },
+
+  saveDrawState() {
+    const canvas = document.getElementById('drawCanvas');
+    try {
+      const data = canvas.toDataURL();
+      this.state.drawHistory.push(data);
+      if (this.state.drawHistory.length > this.state.maxHistory) {
+        this.state.drawHistory.shift();
+      }
+    } catch {}
+  },
+
+  undoDraw() {
+    if (this.state.drawHistory.length === 0) {
+      this.toast('没有可撤销的操作');
+      return;
+    }
+    const data = this.state.drawHistory.pop();
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = data;
+  },
+
+  clearDraw() {
+    if (!confirm('确定清空画布吗？')) return;
+    this.saveDrawState();
+    this.clearDrawCanvas();
+  },
+
+  loadDrawing(dataUrl) {
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = dataUrl;
+  },
+
+  // ========== Color Palette ==========
+  hexToRgb(hex) {
+    const c = hex.replace('#','');
+    return {
+      r: parseInt(c.substr(0,2),16),
+      g: parseInt(c.substr(2,2),16),
+      b: parseInt(c.substr(4,2),16),
+    };
+  },
+
+  getEffectiveDrawColor() {
+    const rgb = this.hexToRgb(this.state.drawColor);
+    return `rgba(${rgb.r},${rgb.g},${rgb.b},${this.state.drawOpacity})`;
+  },
+
+  renderColorPalette() {
+    const palette = document.getElementById('colorPalette');
+    palette.innerHTML = this.colors.map(c => 
+      `<div class="color-dot ${c === this.state.drawColor ? 'active' : ''}" style="background:${c}" onclick="App.setDrawColor('${c}')"></div>`
+    ).join('');
+    this.updateColorPreview();
+    
+    // Pattern colors
+    const pPalette = document.getElementById('patternColorPalette');
+    if (pPalette) {
+      pPalette.innerHTML = this.colors.map(c => 
+        `<div class="color-dot ${c === this.state.patternDrawColor ? 'active' : ''}" style="background:${c}" onclick="App.setPatternColor('${c}')"></div>`
+      ).join('');
+    }
+  },
+
+  updateColorPreview() {
+    const fill = document.getElementById('colorPreviewFill');
+    if (fill) {
+      fill.style.background = this.getEffectiveDrawColor();
+    }
+    const slider = document.getElementById('drawOpacitySlider');
+    if (slider) slider.value = Math.round(this.state.drawOpacity * 100);
+    const value = document.getElementById('drawOpacityValue');
+    if (value) value.textContent = Math.round(this.state.drawOpacity * 100) + '%';
+  },
+
+  setDrawColor(color) {
+    this.state.drawColor = color;
+    this.renderColorPalette();
+    if (this.state.mode === 'eraser') {
+      this.setMode('draw');
+    }
+  },
+
+  setDrawOpacity(val) {
+    this.state.drawOpacity = parseInt(val) / 100;
+    this.updateColorPreview();
+  },
+
+  getEffectivePatternColor() {
+    const rgb = this.hexToRgb(this.state.patternDrawColor);
+    return `rgba(${rgb.r},${rgb.g},${rgb.b},${this.state.patternDrawOpacity})`;
+  },
+
+  getEffectiveFullPageColor() {
+    const rgb = this.hexToRgb(this.state.fullPageDrawColor);
+    return `rgba(${rgb.r},${rgb.g},${rgb.b},${this.state.fullPageDrawOpacity})`;
+  },
+
+  setPatternOpacity(val) {
+    this.state.patternDrawOpacity = parseInt(val) / 100;
+    const valueEl = document.getElementById('patternOpacityValue');
+    if (valueEl) valueEl.textContent = val + '%';
+  },
+
+  setFullPageOpacity(val) {
+    this.state.fullPageDrawOpacity = parseInt(val) / 100;
+    const valueEl = document.getElementById('fpOpacityValue');
+    if (valueEl) valueEl.textContent = val + '%';
+  },
+
+  setPatternColor(color) {
+    this.state.patternDrawColor = color;
+    this.state.patternDrawMode = 'draw';
+    const eraserBtn = document.getElementById('patternEraserBtn');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    this.showPatternBrushBtn();
+    this.renderColorPalette();
+  },
+
+  cycleBrushSize() {
+    this.state.brushIndex = (this.state.brushIndex + 1) % this.state.brushSizes.length;
+    this.state.brushSize = this.state.brushSizes[this.state.brushIndex];
+    this.updateBrushDot();
+  },
+
+  updateBrushDot() {
+    const dot = document.getElementById('brushDot');
+    const size = this.state.brushSizes[this.state.brushIndex];
+    dot.style.width = size * 1.5 + 'px';
+    dot.style.height = size * 1.5 + 'px';
+  },
+
+  cycleEraserSize() {
+    this.state.eraserIndex = (this.state.eraserIndex + 1) % this.state.eraserSizes.length;
+    this.updateEraserDot();
+  },
+
+  updateEraserDot() {
+    const dot = document.getElementById('eraserDot');
+    if (!dot) return;
+    const size = this.state.eraserSizes[this.state.eraserIndex];
+    const displaySize = Math.min(size * 0.8, 20);
+    dot.style.width = displaySize + 'px';
+    dot.style.height = displaySize + 'px';
+  },
+
+  // ========== Background ==========
+  applyBackground() {
+    const bg = this.state.currentBg;
+    const paperBg = document.getElementById('paperBg');
+    const textLayer = document.getElementById('textLayer');
+
+    if (!bg) {
+      paperBg.style.cssText = '';
+      paperBg.style.background = 'var(--surface)';
+      textLayer.style.color = 'var(--text)';
+      return;
+    }
+
+    if (bg.type === 'preset') {
+      const preset = this.presets.find(p => p.id === bg.presetId);
+      if (preset) {
+        paperBg.style.cssText = '';
+        if (preset.extraStyle) {
+          paperBg.style.cssText = preset.extraStyle;
+        }
+        // Use CSS variable for blank paper so it follows theme
+        if (bg.presetId === 'blank') {
+          paperBg.style.background = 'var(--surface)';
+          textLayer.style.color = 'var(--text)';
+        } else {
+          paperBg.style.background = preset.bg;
+          textLayer.style.color = preset.textColor || 'var(--text)';
+        }
+      }
+    } else if (bg.type === 'custom') {
+      paperBg.style.cssText = '';
+      if (bg.fullPageImage) {
+        paperBg.style.background = `url("${bg.fullPageImage}")`;
+        paperBg.style.backgroundSize = 'cover';
+        paperBg.style.backgroundRepeat = 'no-repeat';
+        paperBg.style.backgroundPosition = 'top center';
+        textLayer.style.color = '#1E1B2E';
+      } else {
+        let bgStr = bg.color;
+        if (bg.pattern) {
+          const pattern = this.patterns.find(p => p.id === bg.pattern);
+          if (pattern && pattern.svg) {
+            const patternColor = bg.patternColor || '#CCCCCC';
+            const fullSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">${pattern.svg.replace(/\{color\}/g, patternColor)}</svg>`;
+            bgStr = `url("data:image/svg+xml,${encodeURIComponent(fullSvg)}")`;
+          }
+        } else if (bg.customPatternImage) {
+          bgStr = `url("${bg.customPatternImage}")`;
+        }
+        paperBg.style.background = bgStr;
+        paperBg.style.backgroundColor = bg.color;
+        textLayer.style.color = this.isDarkColor(bg.color) ? '#E5E7EB' : '#1E1B2E';
+      }
+    }
+  },
+
+  isDarkColor(hex) {
+    const c = hex.replace('#', '');
+    const r = parseInt(c.substr(0, 2), 16);
+    const g = parseInt(c.substr(2, 2), 16);
+    const b = parseInt(c.substr(4, 2), 16);
+    return (r * 0.299 + g * 0.587 + b * 0.114) < 128;
+  },
+
+  // ========== BG Picker ==========
+  openBgPicker() {
+    this.renderBgGrid();
+    this.showView('bgPickerView');
+  },
+
+  renderBgGrid() {
+    const grid = document.getElementById('bgGrid');
+    const currentBg = this.state.currentBg;
+    
+    let html = this.presets.map(p => {
+      const selected = currentBg && currentBg.type === 'preset' && currentBg.presetId === p.id;
+      const bgStyle = p.previewBg || p.bg;
+      return `
+        <div class="bg-card ${selected ? 'selected' : ''}" onclick="App.selectPresetBg('${p.id}')">
+          <div class="preview" style="background:${bgStyle};${p.extraStyle || ''}"></div>
+          <div class="label">${p.name}</div>
+        </div>
+      `;
+    }).join('');
+    
+    // Custom card
+    const isCustomSelected = currentBg && currentBg.type === 'custom';
+    if (isCustomSelected) {
+      let bgStr = currentBg.color;
+      let extraStyle = '';
+      if (currentBg.fullPageImage) {
+        bgStr = `url("${currentBg.fullPageImage}")`;
+        extraStyle = 'background-size:cover;background-repeat:no-repeat;background-position:center;';
+      } else {
+        if (currentBg.pattern) {
+          const pattern = this.patterns.find(p => p.id === currentBg.pattern);
+          if (pattern && pattern.svg) {
+            const patternColor = currentBg.patternColor || '#CCCCCC';
+            const fullSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">${pattern.svg.replace(/\{color\}/g, patternColor)}</svg>`;
+            bgStr = `url("data:image/svg+xml,${encodeURIComponent(fullSvg)}")`;
+          }
+        } else if (currentBg.customPatternImage) {
+          bgStr = `url("${currentBg.customPatternImage}")`;
+        }
+      }
+      html += `
+        <div class="bg-card selected" onclick="App.openCustomBg()">
+          <div class="preview" style="background:${bgStr};background-color:${currentBg.color};${extraStyle}"></div>
+          <div class="label">自定义</div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="bg-card custom-card" onclick="App.openCustomBg()">
+          <span class="plus">＋</span>
+          <span class="text">自定义背景</span>
+        </div>
+      `;
+    }
+    
+    grid.innerHTML = html;
+  },
+
+  selectPresetBg(presetId) {
+    this.state.currentBg = { type: 'preset', presetId };
+    this.applyBackground();
+    this.renderBgGrid();
+    setTimeout(() => {
+      this.showView('editorView');
+      this.resizeCanvas();
+    }, 150);
+    this.toast('已切换稿纸');
+  },
+
+  // ========== Custom BG ==========
+  openCustomBg() {
+    // Load current custom bg state if exists
+    const currentBg = this.state.currentBg;
+    if (currentBg && currentBg.type === 'custom') {
+      this.state.customBg = {
+        color: currentBg.color || '#FFF8E7',
+        pattern: currentBg.pattern || null,
+        patternColor: currentBg.patternColor || '#CCCCCC',
+        customPatternImage: currentBg.customPatternImage || null,
+        fullPageImage: currentBg.fullPageImage || null,
+      };
+    } else {
+      this.state.customBg = {
+        color: '#FFF8E7',
+        pattern: null,
+        patternColor: '#CCCCCC',
+        customPatternImage: null,
+        fullPageImage: null,
+      };
+    }
+    this.renderBgColors();
+    this.renderPatterns();
+    this.updateCustomBgPreview();
+    this.showView('customBgView');
+  },
+
+  renderBgColors() {
+    const grid = document.getElementById('bgColorGrid');
+    const selected = this.state.customBg.color;
+    grid.innerHTML = this.bgColors.map(c => 
+      `<div class="color-swatch ${c === selected ? 'selected' : ''}" style="background:${c}" onclick="App.setBgColor('${c}')"></div>`
+    ).join('');
+  },
+
+  setBgColor(color) {
+    this.state.customBg.color = color;
+    this.state.customBg.customPatternImage = null;
+    this.state.customBg.fullPageImage = null;
+    this.renderBgColors();
+    this.updateCustomBgPreview();
+  },
+
+  renderPatterns() {
+    const grid = document.getElementById('patternGrid');
+    const selected = this.state.customBg.pattern;
+    const patternColor = this.state.customBg.patternColor || '#7C3AED';
+    
+    grid.innerHTML = this.patterns.map(p => {
+      const bgStr = p.svg ? `url("data:image/svg+xml,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">${p.svg.replace(/\{color\}/g, patternColor)}</svg>`
+      )}")` : '#FFFFFF';
+      return `
+        <div class="pattern-card ${p.id === selected ? 'selected' : ''}" onclick="App.setPattern('${p.id}')">
+          <div class="pattern-preview" style="background:${bgStr};background-color:#FFFFFF"></div>
+          <div class="pattern-name">${p.name}</div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  setPattern(patternId) {
+    if (patternId === 'none') {
+      this.state.customBg.pattern = null;
+    } else {
+      this.state.customBg.pattern = patternId;
+      this.state.customBg.patternColor = '#7C3AED';
+      this.state.customBg.customPatternImage = null;
+      this.state.customBg.fullPageImage = null;
+    }
+    this.renderPatterns();
+    this.updateCustomBgPreview();
+  },
+
+  updateCustomBgPreview() {
+    const preview = document.getElementById('customBgPreview');
+    const cb = this.state.customBg;
+    if (cb.fullPageImage) {
+      preview.style.background = `url("${cb.fullPageImage}")`;
+      preview.style.backgroundSize = 'cover';
+      preview.style.backgroundRepeat = 'no-repeat';
+      preview.style.backgroundPosition = 'center';
+      preview.style.backgroundColor = '';
+      return;
+    }
+    let bgStr = cb.color;
+    if (cb.pattern) {
+      const pattern = this.patterns.find(p => p.id === cb.pattern);
+      if (pattern && pattern.svg) {
+        const patternColor = cb.patternColor || '#7C3AED';
+        const fullSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">${pattern.svg.replace(/\{color\}/g, patternColor)}</svg>`;
+        bgStr = `url("data:image/svg+xml,${encodeURIComponent(fullSvg)}")`;
+      }
+    } else if (cb.customPatternImage) {
+      bgStr = `url("${cb.customPatternImage}")`;
+    }
+    preview.style.background = bgStr;
+    preview.style.backgroundColor = cb.color;
+  },
+
+  applyCustomBg() {
+    const cb = this.state.customBg;
+    this.state.currentBg = {
+      type: 'custom',
+      color: cb.color,
+      pattern: cb.pattern,
+      patternColor: cb.patternColor,
+      customPatternImage: cb.customPatternImage,
+      fullPageImage: cb.fullPageImage,
+    };
+    this.applyBackground();
+    this.renderBgGrid();
+    setTimeout(() => {
+      this.showView('editorView');
+      this.resizeCanvas();
+    }, 100);
+    this.toast('已应用自定义背景');
+  },
+
+  // ========== Pattern Drawing ==========
+  initPatternCanvas() {
+    const canvas = document.getElementById('patternDrawCanvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('patternDrawOverlay');
+    const overlayCtx = overlay.getContext('2d');
+    
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const touch = e.touches ? e.touches[0] : e;
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY,
+      };
+    };
+
+    const start = (e) => {
+      e.preventDefault();
+      this.state.patternDrawing = true;
+      const pos = getPos(e);
+      this.state.patternLastX = pos.x;
+      this.state.patternLastY = pos.y;
+      // Save state for undo
+      this.savePatternDrawState();
+      // Setup overlay for draw mode
+      if (this.state.patternDrawMode === 'draw') {
+        overlay.width = canvas.width;
+        overlay.height = canvas.height;
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlay.style.opacity = this.state.patternDrawOpacity;
+      }
+    };
+
+    const move = (e) => {
+      if (!this.state.patternDrawing) return;
+      e.preventDefault();
+      const pos = getPos(e);
+
+      if (this.state.patternDrawMode === 'eraser') {
+        // Eraser paints with background color to "restore" the base
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = this.state.patternEraserSizes[this.state.patternEraserIndex];
+        ctx.strokeStyle = this.state.customBg.color || '#FFF8E7';
+        ctx.beginPath();
+        ctx.moveTo(this.state.patternLastX, this.state.patternLastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      } else {
+        // Draw on overlay at full opacity — CSS handles the transparency
+        overlayCtx.lineJoin = 'round';
+        overlayCtx.lineCap = 'round';
+        overlayCtx.lineWidth = this.state.patternDrawBrushSizes[this.state.patternDrawBrushIndex];
+        overlayCtx.strokeStyle = this.state.patternDrawColor;
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(this.state.patternLastX, this.state.patternLastY);
+        overlayCtx.lineTo(pos.x, pos.y);
+        overlayCtx.stroke();
+      }
+      this.state.patternLastX = pos.x;
+      this.state.patternLastY = pos.y;
+    };
+
+    const end = () => {
+      if (this.state.patternDrawing && this.state.patternDrawMode === 'draw') {
+        // Composite overlay onto main canvas
+        ctx.globalAlpha = this.state.patternDrawOpacity;
+        ctx.drawImage(overlay, 0, 0);
+        ctx.globalAlpha = 1.0;
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlay.style.opacity = 0;
+      }
+      this.state.patternDrawing = false;
+    };
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+  },
+
+  openPatternDraw() {
+    // Check if there's existing custom pattern content
+    if (this.state.customBg.customPatternImage) {
+      this._redrawChoiceType = 'pattern';
+      document.getElementById('redrawChoiceDesc').textContent = '检测到你之前已经画过图案，你想怎么继续？';
+      document.getElementById('redrawChoiceModal').classList.add('active');
+      return;
+    }
+    // No existing content, open fresh
+    this._openPatternDrawFresh();
+  },
+
+  _openPatternDrawFresh() {
+    document.getElementById('patternDrawModal').classList.add('active');
+    this.clearPatternCanvas();
+    this.state.patternDrawOpacity = 1.0;
+    this.state.patternDrawMode = 'draw';
+    this.state.patternDrawHistory = [];
+    const slider = document.getElementById('patternOpacitySlider');
+    if (slider) slider.value = 100;
+    const valueEl = document.getElementById('patternOpacityValue');
+    if (valueEl) valueEl.textContent = '100%';
+    // Reset overlay
+    const overlay = document.getElementById('patternDrawOverlay');
+    overlay.style.opacity = 0;
+    // Reset eraser UI
+    const eraserBtn = document.getElementById('patternEraserBtn');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    this.updatePatternBrushDot();
+    this.updatePatternEraserDot();
+    this.showPatternBrushBtn();
+  },
+
+  _openPatternDrawModify() {
+    document.getElementById('patternDrawModal').classList.add('active');
+    // Load existing pattern image onto the canvas
+    const canvas = document.getElementById('patternDrawCanvas');
+    const ctx = canvas.getContext('2d');
+    // First fill with background color
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = this.state.customBg.color || '#FFF8E7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Then load existing pattern
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = this.state.customBg.customPatternImage;
+    this.state.patternDrawOpacity = 1.0;
+    this.state.patternDrawMode = 'draw';
+    this.state.patternDrawHistory = [];
+    const slider = document.getElementById('patternOpacitySlider');
+    if (slider) slider.value = 100;
+    const valueEl = document.getElementById('patternOpacityValue');
+    if (valueEl) valueEl.textContent = '100%';
+    const overlay = document.getElementById('patternDrawOverlay');
+    overlay.style.opacity = 0;
+    const eraserBtn = document.getElementById('patternEraserBtn');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    this.updatePatternBrushDot();
+    this.updatePatternEraserDot();
+    this.showPatternBrushBtn();
+  },
+
+  togglePatternEraser() {
+    const btn = document.getElementById('patternEraserBtn');
+    if (this.state.patternDrawMode === 'eraser') {
+      this.state.patternDrawMode = 'draw';
+      if (btn) btn.classList.remove('active');
+      this.showPatternBrushBtn();
+    } else {
+      this.state.patternDrawMode = 'eraser';
+      if (btn) btn.classList.add('active');
+      this.showPatternEraserBtn();
+    }
+  },
+
+  showPatternBrushBtn() {
+    const brushBtn = document.getElementById('patternBrushSizeBtn');
+    const eraserBtn = document.getElementById('patternEraserSizeBtn');
+    if (brushBtn) brushBtn.style.display = '';
+    if (eraserBtn) eraserBtn.style.display = 'none';
+  },
+
+  showPatternEraserBtn() {
+    const brushBtn = document.getElementById('patternBrushSizeBtn');
+    const eraserBtn = document.getElementById('patternEraserSizeBtn');
+    if (brushBtn) brushBtn.style.display = 'none';
+    if (eraserBtn) eraserBtn.style.display = '';
+  },
+
+  cyclePatternEraser() {
+    this.state.patternEraserIndex = (this.state.patternEraserIndex + 1) % this.state.patternEraserSizes.length;
+    this.updatePatternEraserDot();
+  },
+
+  updatePatternEraserDot() {
+    const dot = document.getElementById('patternEraserDot');
+    if (!dot) return;
+    const size = this.state.patternEraserSizes[this.state.patternEraserIndex];
+    const displaySize = Math.min(size * 0.8, 20);
+    dot.style.width = displaySize + 'px';
+    dot.style.height = displaySize + 'px';
+  },
+
+  cyclePatternBrush() {
+    this.state.patternDrawBrushIndex = (this.state.patternDrawBrushIndex + 1) % this.state.patternDrawBrushSizes.length;
+    this.updatePatternBrushDot();
+  },
+
+  updatePatternBrushDot() {
+    const dot = document.getElementById('patternBrushDot');
+    if (!dot) return;
+    const size = this.state.patternDrawBrushSizes[this.state.patternDrawBrushIndex];
+    dot.style.width = size * 1.5 + 'px';
+    dot.style.height = size * 1.5 + 'px';
+  },
+
+  savePatternDrawState() {
+    const canvas = document.getElementById('patternDrawCanvas');
+    try {
+      const data = canvas.toDataURL();
+      this.state.patternDrawHistory.push(data);
+      if (this.state.patternDrawHistory.length > this.state.maxHistory) {
+        this.state.patternDrawHistory.shift();
+      }
+    } catch {}
+  },
+
+  undoPatternDraw() {
+    if (this.state.patternDrawHistory.length === 0) {
+      this.toast('没有可撤回的操作');
+      return;
+    }
+    const data = this.state.patternDrawHistory.pop();
+    const canvas = document.getElementById('patternDrawCanvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = data;
+  },
+
+  closePatternDraw() {
+    document.getElementById('patternDrawModal').classList.remove('active');
+  },
+
+  clearPatternCanvas() {
+    const canvas = document.getElementById('patternDrawCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = this.state.customBg.color || '#FFF8E7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  },
+
+  confirmPatternDraw() {
+    const canvas = document.getElementById('patternDrawCanvas');
+    // Create a tiled version
+    const tileCanvas = document.createElement('canvas');
+    tileCanvas.width = 60;
+    tileCanvas.height = 60;
+    const tileCtx = tileCanvas.getContext('2d');
+    // Custom bg color
+    tileCtx.fillStyle = this.state.customBg.color || '#FFF8E7';
+    tileCtx.fillRect(0, 0, 60, 60);
+    // Scale down the pattern
+    tileCtx.drawImage(canvas, 0, 0, 60, 60);
+    
+    this.state.customBg.customPatternImage = tileCanvas.toDataURL('image/png');
+    this.state.customBg.pattern = null;
+    this.state.customBg.fullPageImage = null;
+    this.closePatternDraw();
+    this.renderPatterns();
+    this.updateCustomBgPreview();
+    this.toast('图案已添加');
+  },
+
+  // ========== Full Page Drawing ==========
+  initFullPageCanvas() {
+    const canvas = document.getElementById('fullPageCanvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('fullPageOverlay');
+    const overlayCtx = overlay.getContext('2d');
+    ctx.fillStyle = this.state.customBg.color || '#FFF8E7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const touch = e.touches ? e.touches[0] : e;
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY,
+      };
+    };
+
+    const start = (e) => {
+      e.preventDefault();
+      this.state.fullPageDrawing = true;
+      const pos = getPos(e);
+      this.state.fullPageLastX = pos.x;
+      this.state.fullPageLastY = pos.y;
+      // Save state for undo
+      this.saveFullPageDrawState();
+      // Setup overlay for draw mode
+      if (this.state.fullPageMode === 'draw') {
+        overlay.width = canvas.width;
+        overlay.height = canvas.height;
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlay.style.opacity = this.state.fullPageDrawOpacity;
+      }
+    };
+
+    const move = (e) => {
+      if (!this.state.fullPageDrawing) return;
+      e.preventDefault();
+      const pos = getPos(e);
+
+      if (this.state.fullPageMode === 'eraser') {
+        // Eraser paints with background color — only removes strokes, keeps base color
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = this.state.fullPageEraserSizes[this.state.fullPageEraserIndex];
+        ctx.strokeStyle = this.state.customBg.color || '#FFF8E7';
+        ctx.beginPath();
+        ctx.moveTo(this.state.fullPageLastX, this.state.fullPageLastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      } else {
+        // Draw on overlay at full opacity — CSS handles transparency
+        overlayCtx.lineJoin = 'round';
+        overlayCtx.lineCap = 'round';
+        overlayCtx.lineWidth = this.state.fullPageBrushSizes[this.state.fullPageBrushIndex];
+        overlayCtx.strokeStyle = this.state.fullPageDrawColor;
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(this.state.fullPageLastX, this.state.fullPageLastY);
+        overlayCtx.lineTo(pos.x, pos.y);
+        overlayCtx.stroke();
+      }
+      this.state.fullPageLastX = pos.x;
+      this.state.fullPageLastY = pos.y;
+    };
+
+    const end = () => {
+      if (this.state.fullPageDrawing && this.state.fullPageMode === 'draw') {
+        // Composite overlay onto main canvas
+        ctx.globalAlpha = this.state.fullPageDrawOpacity;
+        ctx.drawImage(overlay, 0, 0);
+        ctx.globalAlpha = 1.0;
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlay.style.opacity = 0;
+      }
+      this.state.fullPageDrawing = false;
+    };
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+
+    this.renderFullPageColors();
+  },
+
+  renderFullPageColors() {
+    const palette = document.getElementById('fullPageColorPalette');
+    if (!palette) return;
+    palette.innerHTML = this.colors.map(c =>
+      `<div class="color-dot ${c === this.state.fullPageDrawColor ? 'active' : ''}" style="background:${c}" onclick="App.setFullPageColor('${c}')"></div>`
+    ).join('');
+    this.updateFullPageBrushDot();
+  },
+
+  setFullPageColor(color) {
+    this.state.fullPageDrawColor = color;
+    this.state.fullPageMode = 'draw';
+    this.renderFullPageColors();
+    const btn = document.getElementById('fpEraserBtn');
+    if (btn) btn.classList.remove('active');
+    this.showFullPageBrushBtn();
+  },
+
+  toggleFullPageEraser() {
+    const btn = document.getElementById('fpEraserBtn');
+    if (this.state.fullPageMode === 'eraser') {
+      this.state.fullPageMode = 'draw';
+      if (btn) btn.classList.remove('active');
+      this.showFullPageBrushBtn();
+    } else {
+      this.state.fullPageMode = 'eraser';
+      if (btn) btn.classList.add('active');
+      this.showFullPageEraserBtn();
+    }
+  },
+
+  showFullPageBrushBtn() {
+    const brushBtn = document.getElementById('fpBrushSizeBtn');
+    const eraserBtn = document.getElementById('fpEraserSizeBtn');
+    if (brushBtn) brushBtn.style.display = '';
+    if (eraserBtn) eraserBtn.style.display = 'none';
+  },
+
+  showFullPageEraserBtn() {
+    const brushBtn = document.getElementById('fpBrushSizeBtn');
+    const eraserBtn = document.getElementById('fpEraserSizeBtn');
+    if (brushBtn) brushBtn.style.display = 'none';
+    if (eraserBtn) eraserBtn.style.display = '';
+  },
+
+  cycleFullPageBrush() {
+    this.state.fullPageBrushIndex = (this.state.fullPageBrushIndex + 1) % this.state.fullPageBrushSizes.length;
+    this.updateFullPageBrushDot();
+  },
+
+  cycleFullPageEraser() {
+    this.state.fullPageEraserIndex = (this.state.fullPageEraserIndex + 1) % this.state.fullPageEraserSizes.length;
+    this.updateFullPageEraserDot();
+  },
+
+  updateFullPageBrushDot() {
+    const dot = document.getElementById('fpBrushDot');
+    if (!dot) return;
+    const size = this.state.fullPageBrushSizes[this.state.fullPageBrushIndex];
+    dot.style.width = size * 1.5 + 'px';
+    dot.style.height = size * 1.5 + 'px';
+  },
+
+  updateFullPageEraserDot() {
+    const dot = document.getElementById('fpEraserDot');
+    if (!dot) return;
+    const size = this.state.fullPageEraserSizes[this.state.fullPageEraserIndex];
+    const displaySize = Math.min(size * 0.8, 20);
+    dot.style.width = displaySize + 'px';
+    dot.style.height = displaySize + 'px';
+  },
+
+  saveFullPageDrawState() {
+    const canvas = document.getElementById('fullPageCanvas');
+    try {
+      const data = canvas.toDataURL();
+      this.state.fullPageDrawHistory.push(data);
+      if (this.state.fullPageDrawHistory.length > this.state.maxHistory) {
+        this.state.fullPageDrawHistory.shift();
+      }
+    } catch {}
+  },
+
+  undoFullPageDraw() {
+    if (this.state.fullPageDrawHistory.length === 0) {
+      this.toast('没有可撤回的操作');
+      return;
+    }
+    const data = this.state.fullPageDrawHistory.pop();
+    const canvas = document.getElementById('fullPageCanvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = data;
+  },
+
+  fillFullPageCanvas() {
+    const canvas = document.getElementById('fullPageCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = this.state.fullPageDrawOpacity;
+    ctx.fillStyle = this.state.fullPageDrawColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+    this.toast('已填充底色');
+  },
+
+  openFullPageDraw() {
+    // Check if there's existing full page content
+    if (this.state.customBg.fullPageImage) {
+      this._redrawChoiceType = 'fullpage';
+      document.getElementById('redrawChoiceDesc').textContent = '检测到你之前已经规划过整页，你想怎么继续？';
+      document.getElementById('redrawChoiceModal').classList.add('active');
+      return;
+    }
+    // No existing content, open fresh
+    this._openFullPageDrawFresh();
+  },
+
+  _openFullPageDrawFresh() {
+    document.getElementById('fullPageDrawModal').classList.add('active');
+    this.clearFullPageCanvas();
+    this.state.fullPageDrawOpacity = 1.0;
+    this.state.fullPageMode = 'draw';
+    this.state.fullPageDrawHistory = [];
+    const slider = document.getElementById('fpOpacitySlider');
+    if (slider) slider.value = 100;
+    const valueEl = document.getElementById('fpOpacityValue');
+    if (valueEl) valueEl.textContent = '100%';
+    this.renderFullPageColors();
+    // Reset overlay
+    const overlay = document.getElementById('fullPageOverlay');
+    overlay.style.opacity = 0;
+    // Reset eraser UI
+    const eraserBtn = document.getElementById('fpEraserBtn');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    this.updateFullPageBrushDot();
+    this.updateFullPageEraserDot();
+    this.showFullPageBrushBtn();
+  },
+
+  _openFullPageDrawModify() {
+    document.getElementById('fullPageDrawModal').classList.add('active');
+    // Load existing full page image onto the canvas
+    const canvas = document.getElementById('fullPageCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = this.state.customBg.fullPageImage;
+    this.state.fullPageDrawOpacity = 1.0;
+    this.state.fullPageMode = 'draw';
+    this.state.fullPageDrawHistory = [];
+    const slider = document.getElementById('fpOpacitySlider');
+    if (slider) slider.value = 100;
+    const valueEl = document.getElementById('fpOpacityValue');
+    if (valueEl) valueEl.textContent = '100%';
+    this.renderFullPageColors();
+    const overlay = document.getElementById('fullPageOverlay');
+    overlay.style.opacity = 0;
+    const eraserBtn = document.getElementById('fpEraserBtn');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    this.updateFullPageBrushDot();
+    this.updateFullPageEraserDot();
+    this.showFullPageBrushBtn();
+  },
+
+  closeFullPageDraw() {
+    document.getElementById('fullPageDrawModal').classList.remove('active');
+  },
+
+  clearFullPageCanvas() {
+    const canvas = document.getElementById('fullPageCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = this.state.customBg.color || '#FFF8E7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  },
+
+  confirmFullPageDraw() {
+    const canvas = document.getElementById('fullPageCanvas');
+    this.state.customBg.fullPageImage = canvas.toDataURL('image/png');
+    this.state.customBg.pattern = null;
+    this.state.customBg.customPatternImage = null;
+    this.closeFullPageDraw();
+    this.renderPatterns();
+    this.updateCustomBgPreview();
+    this.toast('整页背景已添加');
+  },
+
+  // ========== Save Note ==========
+  saveNote(silent = false) {
+    const title = document.getElementById('noteTitle').value.trim();
+    const text = document.getElementById('textLayer').innerHTML;
+    const textTrimmed = text.trim();
+    
+    let drawingData = null;
+    if (this.hasDrawing()) {
+      const canvas = document.getElementById('drawCanvas');
+      drawingData = canvas.toDataURL('image/png');
+    }
+    
+    if (!title && !textTrimmed && !drawingData && !this.state.voiceDataUrl) {
+      if (!silent) this.toast('内容为空，未保存');
+      return;
+    }
+
+    const now = Date.now();
+    const notes = this.getNotes();
+    
+    if (this.state.currentNote) {
+      // Update existing
+      const idx = notes.findIndex(n => n.id === this.state.currentNote.id);
+      if (idx >= 0) {
+        notes[idx].title = title;
+        notes[idx].text = text;
+        notes[idx].drawingData = drawingData;
+        notes[idx].voiceData = this.state.voiceDataUrl || null;
+        notes[idx].background = this.state.currentBg;
+        notes[idx].updatedAt = now;
+        this.state.currentNote = notes[idx];
+      }
+    } else {
+      // Create new
+      const newNote = {
+        id: 'note_' + now + '_' + Math.random().toString(36).substr(2, 6),
+        title: title || (textTrimmed ? textTrimmed.replace(/<[^>]*>/g, '').substring(0, 20) : '手绘画作'),
+        text: text,
+        drawingData: drawingData,
+        voiceData: this.state.voiceDataUrl || null,
+        background: this.state.currentBg,
+        collection: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      notes.push(newNote);
+      this.state.currentNote = newNote;
+      this.saveNotes(notes);
+      
+      // Show collection modal for new notes
+      if (!silent) {
+        this.showCollectionModal(newNote.id);
+        return;
+      }
+    }
+    
+    this.saveNotes(notes);
+    if (!silent) this.toast('已保存 ✓');
+  },
+
+  // ========== Collection Modal ==========
+  showCollectionModal(noteId) {
+    const notes = this.getNotes();
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+    
+    const list = document.getElementById('modalCollectionList');
+    list.innerHTML = this.collections.map(col => {
+      const selected = note.collection === col.id;
+      return `
+        <div class="modal-collection-item ${selected ? 'selected' : ''}" onclick="App.assignCollection('${noteId}', '${col.id}')">
+          <div class="icon" style="background:${col.color}15">${col.icon}</div>
+          <div class="name" style="color:${col.color}">${col.name}</div>
+          <div class="check">✓</div>
+        </div>
+      `;
+    }).join('') + `
+      <div class="modal-collection-item skip" onclick="App.skipCollection()">
+        跳过，归入未分类
+      </div>
+    `;
+    
+    document.getElementById('collectionModal').classList.add('active');
+  },
+
+  assignCollection(noteId, colId) {
+    const notes = this.getNotes();
+    const idx = notes.findIndex(n => n.id === noteId);
+    if (idx >= 0) {
+      notes[idx].collection = colId;
+      this.saveNotes(notes);
+    }
+    document.getElementById('collectionModal').classList.remove('active');
+    const col = this.collections.find(c => c.id === colId);
+    this.toast(`已归类到「${col.name}」`);
+    
+    setTimeout(() => {
+      this.renderHome();
+      this.showView('homeView');
+    }, 300);
+  },
+
+  skipCollection() {
+    // Assign to 未分类
+    const notes = this.getNotes();
+    const note = this.state.currentNote;
+    if (note) {
+      const idx = notes.findIndex(n => n.id === note.id);
+      if (idx >= 0) {
+        notes[idx].collection = 'uncategorized';
+        this.saveNotes(notes);
+      }
+    }
+    document.getElementById('collectionModal').classList.remove('active');
+    this.toast('已归入「未分类」');
+    setTimeout(() => {
+      this.renderHome();
+      this.showView('homeView');
+    }, 300);
+  },
+
+  // ========== Collection Management ==========
+  _colManageState: { editingId: null, icon: '📝', color: '#3B82F6' },
+  _redrawChoiceType: null, // 'pattern' or 'fullpage'
+
+  showAddCollectionModal() {
+    this._colManageState = { editingId: null, icon: '📝', color: '#3B82F6' };
+    document.getElementById('colManageTitle').textContent = '添加合集';
+    document.getElementById('colManageDesc').textContent = '给合集起个名字，选个图标和颜色';
+    document.getElementById('colNameInput').value = '';
+    this.renderColManageOptions();
+    document.getElementById('colManageModal').classList.add('active');
+  },
+
+  showRenameCollectionModal(colId) {
+    const col = this.collections.find(c => c.id === colId);
+    if (!col) return;
+    this._colManageState = { editingId: colId, icon: col.icon, color: col.color };
+    document.getElementById('colManageTitle').textContent = '编辑合集';
+    document.getElementById('colManageDesc').textContent = '修改合集名称、图标或颜色';
+    document.getElementById('colNameInput').value = col.name;
+    this.renderColManageOptions();
+    document.getElementById('colManageModal').classList.add('active');
+  },
+
+  renderColManageOptions() {
+    // Icon picker
+    const iconPicker = document.getElementById('colIconPicker');
+    iconPicker.innerHTML = this.collectionIcons.map(ic =>
+      `<div class="icon-pick-item ${ic === this._colManageState.icon ? 'active' : ''}" onclick="App.selectColIcon('${ic}')">${ic}</div>`
+    ).join('');
+
+    // Color picker
+    const colorPicker = document.getElementById('colColorPicker');
+    colorPicker.innerHTML = this.collectionColors.map(c =>
+      `<div class="col-color-dot ${c === this._colManageState.color ? 'active' : ''}" style="background:${c}" onclick="App.selectColColor('${c}')"></div>`
+    ).join('');
+  },
+
+  selectColIcon(icon) {
+    this._colManageState.icon = icon;
+    this.renderColManageOptions();
+  },
+
+  selectColColor(color) {
+    this._colManageState.color = color;
+    this.renderColManageOptions();
+  },
+
+  closeColManageModal() {
+    document.getElementById('colManageModal').classList.remove('active');
+  },
+
+  // ========== Redraw Choice ==========
+  redrawModify() {
+    document.getElementById('redrawChoiceModal').classList.remove('active');
+    if (this._redrawChoiceType === 'pattern') {
+      this._openPatternDrawModify();
+    } else if (this._redrawChoiceType === 'fullpage') {
+      this._openFullPageDrawModify();
+    }
+    this._redrawChoiceType = null;
+  },
+
+  redrawClear() {
+    document.getElementById('redrawChoiceModal').classList.remove('active');
+    if (this._redrawChoiceType === 'pattern') {
+      // Clear the stored pattern image first
+      this.state.customBg.customPatternImage = null;
+      this._openPatternDrawFresh();
+    } else if (this._redrawChoiceType === 'fullpage') {
+      // Clear the stored full page image first
+      this.state.customBg.fullPageImage = null;
+      this._openFullPageDrawFresh();
+    }
+    this._redrawChoiceType = null;
+  },
+
+  redrawSkip() {
+    document.getElementById('redrawChoiceModal').classList.remove('active');
+    this._redrawChoiceType = null;
+  },
+
+  confirmColManage() {
+    const name = document.getElementById('colNameInput').value.trim();
+    if (!name) {
+      this.toast('请输入合集名称');
+      return;
+    }
+
+    if (this._colManageState.editingId) {
+      // Rename existing
+      const idx = this.collections.findIndex(c => c.id === this._colManageState.editingId);
+      if (idx >= 0) {
+        this.collections[idx].name = name;
+        this.collections[idx].icon = this._colManageState.icon;
+        this.collections[idx].color = this._colManageState.color;
+      }
+      this.saveCollections(this.collections);
+      this.toast(`合集「${name}」已更新`);
+    } else {
+      // Add new
+      const id = 'col_' + Date.now();
+      this.collections.push({
+        id: id,
+        name: name,
+        icon: this._colManageState.icon,
+        color: this._colManageState.color,
+      });
+      this.saveCollections(this.collections);
+      this.toast(`合集「${name}」已添加`);
+    }
+
+    this.closeColManageModal();
+    this.renderHome();
+  },
+
+  // ========== Theme ==========
+  themes: [
+    { id: 'default', name: '默认紫粉', swatches: ['#7C3AED','#EC4899','#F59E0B','#14B8A6','#F5F3FF'],
+      colors: ['#1E1B2E','#EF4444','#F59E0B','#10B981','#3B82F6','#8B5CF6','#EC4899','#FFFFFF'],
+      bgColors: ['#FFFFFF','#FFF8E7','#F0FDF4','#EFF6FF','#FDF2F8','#F5F3FF','#FEF3C7','#FEE2E2','#E0F2FE','#F3E8FF','#FFFBEB','#F1F5F9'] },
+    { id: 'morandi', name: '莫兰蒂色系', swatches: ['#9B8E7E','#B8A090','#C4A882','#8AA89E','#F0EBE3'],
+      colors: ['#3D3427','#C97064','#C4A882','#8AA89E','#7B8F8A','#9B8E7E','#B8A090','#FAF7F2'],
+      bgColors: ['#FAF7F2','#F0EBE3','#E8E0D5','#EDE4D8','#E5DDD2','#F5F0E8','#D8CFC0','#E8DDD0','#F2EDE5','#EBE3D8','#F7F3EC','#E0D6C8'] },
+    { id: 'gray', name: '格雷系', swatches: ['#4B5563','#6B7280','#9CA3AF','#D1D5DB','#F3F4F6'],
+      colors: ['#111827','#374151','#4B5563','#6B7280','#9CA3AF','#1F2937','#78716C','#FFFFFF'],
+      bgColors: ['#FFFFFF','#F9FAFB','#F3F4F6','#E5E7EB','#D1D5DB','#FAFAFA','#F5F5F5','#EEEEEE','#E8E8E8','#F0F0F0','#F7F7F7','#E0E0E0'] },
+    { id: 'purple', name: '紫色系', swatches: ['#7C3AED','#D946EF','#C084FC','#A78BFA','#F5F3FF'],
+      colors: ['#2E1065','#7C3AED','#A855F7','#C084FC','#D946EF','#8B5CF6','#6366F1','#FFFFFF'],
+      bgColors: ['#FFFFFF','#F5F3FF','#EDE9FE','#F3E8FF','#FAE8FF','#F0E6FF','#EEE2FF','#E8DCF8','#F5F0FF','#FAF5FF','#EDE4FF','#F8F0FF'] },
+    { id: 'blue', name: '蓝色系', swatches: ['#2563EB','#06B6D4','#3B82F6','#60A5FA','#EFF6FF'],
+      colors: ['#1E3A5F','#2563EB','#3B82F6','#06B6D4','#0EA5E9','#6366F1','#14B8A6','#FFFFFF'],
+      bgColors: ['#FFFFFF','#EFF6FF','#DBEAFE','#E0F2FE','#F0F9FF','#ECFEFF','#F0FDFA','#E0F2FE','#EBF5FF','#F5FAFF','#E8F4FD','#F0F7FF'] },
+    { id: 'dark', name: '夜间模式', swatches: ['#818CF8','#F472B6','#FBBF24','#2DD4BF','#111111'],
+      colors: ['#E4E4E7','#F87171','#FBBF24','#2DD4BF','#60A5FA','#818CF8','#F472B6','#27272A'],
+      bgColors: ['#111111','#18181B','#1A1A1E','#1C1C20','#151518','#1F1F23','#131316','#1B1B1F','#17171A','#1D1D21','#121214','#1E1E22'] },
+    { id: 'pink', name: '粉色系', swatches: ['#EC4899','#F472B6','#F97316','#FBBF24','#FFF1F2'],
+      colors: ['#4A1024','#EC4899','#F472B6','#F97316','#F59E0B','#BE185D','#DB2777','#FFFFFF'],
+      bgColors: ['#FFF1F2','#FFF5F6','#FFF8F9','#FFE4E6','#FCE7F3','#FDF2F8','#FFF0F3','#FFECEF','#FFF3F5','#FEF0F3','#FFF7F8','#FFEBEE'] },
+  ],
+
+  loadTheme() {
+    try {
+      this.state.theme = localStorage.getItem('suiShouJi_theme') || 'default';
+    } catch { this.state.theme = 'default'; }
+    this.applyTheme(this.state.theme);
+  },
+
+  applyTheme(themeId) {
+    document.documentElement.setAttribute('data-theme', themeId === 'default' ? '' : themeId);
+    this.state.theme = themeId;
+    try { localStorage.setItem('suiShouJi_theme', themeId); } catch {}
+    // Update color palettes
+    const t = this.themes.find(t => t.id === themeId);
+    if (t) {
+      this.colors = t.colors;
+      this.bgColors = t.bgColors;
+      // Update draw color to first brush color of the theme
+      this.state.drawColor = t.colors[0];
+      this.state.patternDrawColor = t.colors[3] || t.colors[0];
+      this.state.fullPageDrawColor = t.colors[3] || t.colors[0];
+      // Re-render palettes
+      this.renderColorPalette();
+      this.renderFullPageColors();
+      if (document.getElementById('bgColorGrid').children.length > 0) {
+        this.renderBgColors();
+      }
+    }
+  },
+
+  showThemeModal() {
+    const grid = document.getElementById('themeGrid');
+    grid.innerHTML = this.themes.map(t => `
+      <div class="theme-card ${t.id === this.state.theme ? 'selected' : ''}" onclick="App.setTheme('${t.id}')">
+        <div class="theme-preview">${t.swatches.map(c => `<span class="theme-swatch" style="background:${c}"></span>`).join('')}</div>
+        <div class="theme-name">${t.name}</div>
+      </div>
+    `).join('');
+    document.getElementById('themeModal').classList.add('active');
+    document.getElementById('themeModal').onclick = (e) => {
+      if (e.target === document.getElementById('themeModal')) {
+        document.getElementById('themeModal').classList.remove('active');
+      }
+    };
+  },
+
+  setTheme(themeId) {
+    this.applyTheme(themeId);
+    document.getElementById('themeModal').classList.remove('active');
+    this.toast('主题已切换');
+  },
+
+  // ========== Image Paste & Lasso Crop ==========
+  triggerImagePaste() {
+    document.getElementById('imageFileInput').click();
+  },
+
+  handleImageFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.openImageCrop(e.target.result);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  },
+
+  openImageCrop(dataUrl) {
+    const img = new Image();
+    img.onload = () => {
+      this.state.cropImage = img;
+      this.state.cropLasso = [];
+      this.state.cropLoopClosed = false;
+      document.getElementById('imageCropModal').classList.add('active');
+      document.getElementById('imageCropTip').style.display = '';
+      document.getElementById('imageCropChoice').classList.remove('active');
+      this.resizeImageCropCanvas();
+    };
+    img.src = dataUrl;
+  },
+
+  resizeImageCropCanvas() {
+    const img = this.state.cropImage;
+    if (!img) return;
+    const body = document.getElementById('imageCropBody');
+    const canvas = document.getElementById('imageCropCanvas');
+    const maxW = body.clientWidth;
+    const maxH = body.clientHeight;
+    let w = img.width, h = img.height;
+    const scale = Math.min(maxW / w, maxH / h, 1);
+    w = Math.floor(w * scale);
+    h = Math.floor(h * scale);
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+  },
+
+  initImageCropCanvas() {
+    const canvas = document.getElementById('imageCropCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches ? e.touches[0] : e;
+      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+    };
+
+    const startDraw = (e) => {
+      if (!this.state.cropImage || this.state.cropLoopClosed) return;
+      e.preventDefault();
+      this.state.cropLasso = [];
+      const pos = getPos(e);
+      this.state.cropLasso.push(pos);
+      this.renderCropPreview();
+    };
+
+    const draw = (e) => {
+      if (!this.state.cropImage || this.state.cropLoopClosed) return;
+      e.preventDefault();
+      if (this.state.cropLasso.length === 0) return;
+      const pos = getPos(e);
+      const last = this.state.cropLasso[this.state.cropLasso.length - 1];
+      const dist = Math.hypot(pos.x - last.x, pos.y - last.y);
+      if (dist < 3) return;
+      this.state.cropLasso.push(pos);
+      this.renderCropPreview();
+
+      // Check if loop is closed (finger returned near start point)
+      if (this.state.cropLasso.length > 20) {
+        const first = this.state.cropLasso[0];
+        const d = Math.hypot(pos.x - first.x, pos.y - first.y);
+        if (d < 25) {
+          this.state.cropLoopClosed = true;
+          this.renderCropPreview();
+          document.getElementById('imageCropTip').style.display = 'none';
+          document.getElementById('imageCropChoice').classList.add('active');
+        }
+      }
+    };
+
+    const endDraw = (e) => {
+      if (!this.state.cropImage || this.state.cropLoopClosed) return;
+      e.preventDefault();
+      // If not closed naturally, try to close with nearest point
+      if (this.state.cropLasso.length > 10) {
+        const first = this.state.cropLasso[0];
+        const last = this.state.cropLasso[this.state.cropLasso.length - 1];
+        if (Math.hypot(last.x - first.x, last.y - first.y) < 40) {
+          this.state.cropLasso.push({ x: first.x, y: first.y });
+          this.state.cropLoopClosed = true;
+          this.renderCropPreview();
+          document.getElementById('imageCropTip').style.display = 'none';
+          document.getElementById('imageCropChoice').classList.add('active');
+        }
+      }
+    };
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+  },
+
+  renderCropPreview() {
+    const canvas = document.getElementById('imageCropCanvas');
+    const ctx = canvas.getContext('2d');
+    const img = this.state.cropImage;
+    if (!img) return;
+
+    // Redraw image
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Draw lasso path
+    if (this.state.cropLasso.length < 2) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(this.state.cropLasso[0].x, this.state.cropLasso[0].y);
+    for (let i = 1; i < this.state.cropLasso.length; i++) {
+      ctx.lineTo(this.state.cropLasso[i].x, this.state.cropLasso[i].y);
+    }
+    if (this.state.cropLoopClosed) {
+      ctx.closePath();
+    }
+    ctx.strokeStyle = '#7C3AED';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // If closed, draw semi-transparent overlay
+    if (this.state.cropLoopClosed) {
+      this.drawCropMask(ctx, canvas.width, canvas.height);
+    }
+  },
+
+  drawCropMask(ctx, w, h) {
+    // Create mask: darken outside the lasso path
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = w;
+    offCanvas.height = h;
+    const offCtx = offCanvas.getContext('2d');
+
+    // Draw the lasso path
+    offCtx.beginPath();
+    offCtx.moveTo(this.state.cropLasso[0].x, this.state.cropLasso[0].y);
+    for (let i = 1; i < this.state.cropLasso.length; i++) {
+      offCtx.lineTo(this.state.cropLasso[i].x, this.state.cropLasso[i].y);
+    }
+    offCtx.closePath();
+    offCtx.clip();
+
+    // Fill inside with highlight
+    offCtx.fillStyle = 'rgba(124,58,237,0.15)';
+    offCtx.fill();
+
+    // Draw on main canvas
+    ctx.drawImage(offCanvas, 0, 0);
+  },
+
+  cropSelect(region) {
+    const canvas = document.getElementById('imageCropCanvas');
+    const w = canvas.width, h = canvas.height;
+
+    // Create output canvas
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = w;
+    outCanvas.height = h;
+    const outCtx = outCanvas.getContext('2d');
+
+    const buildPath = (ctx) => {
+      ctx.beginPath();
+      ctx.moveTo(this.state.cropLasso[0].x, this.state.cropLasso[0].y);
+      for (let i = 1; i < this.state.cropLasso.length; i++) {
+        ctx.lineTo(this.state.cropLasso[i].x, this.state.cropLasso[i].y);
+      }
+      ctx.closePath();
+    };
+
+    if (region === 'inside') {
+      buildPath(outCtx);
+      outCtx.clip();
+      outCtx.drawImage(canvas, 0, 0);
+    } else {
+      outCtx.drawImage(canvas, 0, 0);
+      outCtx.globalCompositeOperation = 'destination-out';
+      buildPath(outCtx);
+      outCtx.fill();
+      outCtx.globalCompositeOperation = 'destination-over';
+      outCtx.fillStyle = '#FFFFFF';
+      outCtx.fillRect(0, 0, w, h);
+    }
+
+    this.state.cropImage = null;
+    this.state.cropLasso = [];
+    this.state.cropLoopClosed = false;
+    document.getElementById('imageCropModal').classList.remove('active');
+    document.getElementById('imageCropChoice').classList.remove('active');
+
+    const croppedUrl = outCanvas.toDataURL('image/png');
+    const textLayer = document.getElementById('textLayer');
+    textLayer.focus();
+    const imgId = 'img_' + Date.now();
+    const imgHtml = `<div contenteditable="false" class="inserted-image-wrapper" data-img-id="${imgId}" data-rotate="0" style="width:260px;"><img src="${croppedUrl}" style="transform:rotate(0deg);"><div class="img-ctrls"><button class="img-ctrl-btn" data-action="rotl" title="左转">↺</button><button class="img-ctrl-btn" data-action="rotr" title="右转">↻</button><button class="img-ctrl-btn" data-action="shrink" title="缩小">−</button><button class="img-ctrl-btn" data-action="grow" title="放大">+</button></div></div><br>`;
+    // Insert at cursor
+    document.execCommand('insertHTML', false, imgHtml);
+    this.toast('图片已贴入');
+  },
+
+  cancelImageCrop() {
+    this.state.cropImage = null;
+    this.state.cropLasso = [];
+    this.state.cropLoopClosed = false;
+    document.getElementById('imageCropModal').classList.remove('active');
+    document.getElementById('imageCropChoice').classList.remove('active');
+  },
+
+  // ========== Voice Recording ==========
+  toggleVoiceRecord() {
+    if (this.state.mediaRecorder && this.state.mediaRecorder.state === 'recording') {
+      this.stopVoiceRecord();
+      return;
+    }
+    if (this.state.voiceDataUrl) {
+      // Already have a recording, start playback
+      this.toggleVoicePlayback();
+      return;
+    }
+    this.startVoiceRecord();
+  },
+
+  async startVoiceRecord() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.state.mediaRecorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm' });
+      this.state.voiceChunks = [];
+      this.state.voiceDataUrl = null;
+
+      this.state.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.state.voiceChunks.push(e.data);
+      };
+
+      this.state.mediaRecorder.onstop = () => {
+        const blob = new Blob(this.state.voiceChunks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.state.voiceDataUrl = e.target.result;
+          this.showVoicePlayer();
+        };
+        reader.readAsDataURL(blob);
+        // Stop all tracks
+        stream.getTracks().forEach(t => t.stop());
+      };
+
+      this.state.mediaRecorder.start();
+      this.showRecIndicator();
+      this.state.recStartTime = Date.now();
+      this.state.recTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - this.state.recStartTime) / 1000);
+        const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('recTime').textContent = `${m}:${s}`;
+      }, 200);
+
+      const voiceBtn = document.getElementById('toolVoice');
+      if (voiceBtn) { voiceBtn.textContent = '🔴'; voiceBtn.style.background = '#FEE2E2'; }
+    } catch (err) {
+      this.toast('无法访问麦克风');
+      console.error(err);
+    }
+  },
+
+  stopVoiceRecord() {
+    if (this.state.mediaRecorder && this.state.mediaRecorder.state === 'recording') {
+      this.state.mediaRecorder.stop();
+    }
+    if (this.state.recTimer) {
+      clearInterval(this.state.recTimer);
+      this.state.recTimer = null;
+    }
+    document.getElementById('voiceRecIndicator').classList.remove('active');
+    const voiceBtn = document.getElementById('toolVoice');
+    if (voiceBtn) { voiceBtn.textContent = '🎤'; voiceBtn.style.background = ''; }
+  },
+
+  showRecIndicator() {
+    document.getElementById('voiceArea').classList.add('active');
+    document.getElementById('voiceRecIndicator').classList.add('active');
+    document.getElementById('voicePlayer').style.display = 'none';
+    document.getElementById('recTime').textContent = '00:00';
+  },
+
+  showVoicePlayer() {
+    document.getElementById('voiceArea').classList.add('active');
+    document.getElementById('voiceRecIndicator').classList.remove('active');
+    document.getElementById('voicePlayer').style.display = 'flex';
+    document.getElementById('voiceTime').textContent = document.getElementById('recTime').textContent;
+    document.getElementById('voiceProgressFill').style.width = '0%';
+  },
+
+  toggleVoicePlayback() {
+    if (this.state.voicePlaying) {
+      this.pauseVoice();
+      return;
+    }
+    if (!this.state.voiceDataUrl) return;
+
+    if (this.state.voiceAudio) {
+      this.state.voiceAudio.pause();
+      this.state.voiceAudio = null;
+    }
+
+    const audio = new Audio(this.state.voiceDataUrl);
+    this.state.voiceAudio = audio;
+    this.state.voicePlaying = true;
+    document.getElementById('voicePlayBtn').textContent = '⏸️';
+
+    audio.ontimeupdate = () => {
+      const pct = (audio.currentTime / audio.duration) * 100;
+      document.getElementById('voiceProgressFill').style.width = pct + '%';
+      const m = String(Math.floor(audio.currentTime / 60)).padStart(2, '0');
+      const s = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
+      document.getElementById('voiceTime').textContent = `${m}:${s}`;
+    };
+
+    audio.onended = () => {
+      this.state.voicePlaying = false;
+      document.getElementById('voicePlayBtn').textContent = '▶️';
+    };
+
+    audio.onerror = () => {
+      this.state.voicePlaying = false;
+      document.getElementById('voicePlayBtn').textContent = '▶️';
+    };
+
+    audio.play().catch(() => {
+      this.state.voicePlaying = false;
+      document.getElementById('voicePlayBtn').textContent = '▶️';
+    });
+  },
+
+  pauseVoice() {
+    if (this.state.voiceAudio) {
+      this.state.voiceAudio.pause();
+      this.state.voiceAudio = null;
+    }
+    this.state.voicePlaying = false;
+    document.getElementById('voicePlayBtn').textContent = '▶️';
+  },
+
+  seekVoice(e) {
+    if (!this.state.voiceAudio) return;
+    const bar = e.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    this.state.voiceAudio.currentTime = pct * this.state.voiceAudio.duration;
+  },
+
+  deleteVoice() {
+    if (this.state.voiceAudio) {
+      this.state.voiceAudio.pause();
+      this.state.voiceAudio = null;
+    }
+    this.state.voicePlaying = false;
+    this.state.voiceDataUrl = null;
+    this.state.voiceChunks = [];
+    document.getElementById('voiceArea').classList.remove('active');
+    document.getElementById('voicePlayer').style.display = 'none';
+    document.getElementById('voiceRecIndicator').classList.remove('active');
+    document.getElementById('voicePlayBtn').textContent = '▶️';
+    document.getElementById('voiceProgressFill').style.width = '0%';
+    document.getElementById('voiceTime').textContent = '00:00';
+  },
+
+  // Load voice from saved note
+  loadVoiceData(dataUrl) {
+    if (!dataUrl) return;
+    this.state.voiceDataUrl = dataUrl;
+    this.showVoicePlayer();
+  },
+
+  clearVoiceState() {
+    if (this.state.voiceAudio) {
+      this.state.voiceAudio.pause();
+      this.state.voiceAudio = null;
+    }
+    this.state.voicePlaying = false;
+    this.state.voiceDataUrl = null;
+    this.state.voiceChunks = [];
+    if (this.state.mediaRecorder && this.state.mediaRecorder.state === 'recording') {
+      this.state.mediaRecorder.stop();
+    }
+    if (this.state.recTimer) {
+      clearInterval(this.state.recTimer);
+      this.state.recTimer = null;
+    }
+    document.getElementById('voiceArea').classList.remove('active');
+    document.getElementById('voicePlayer').style.display = 'none';
+    document.getElementById('voiceRecIndicator').classList.remove('active');
+    document.getElementById('voicePlayBtn').textContent = '▶️';
+    document.getElementById('voiceProgressFill').style.width = '0%';
+    document.getElementById('voiceTime').textContent = '00:00';
+    const voiceBtn = document.getElementById('toolVoice');
+    if (voiceBtn) { voiceBtn.textContent = '🎤'; voiceBtn.style.background = ''; }
+  },
+
+  // ========== Toast ==========
+  toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  },
+};
+
+// Start app
+App.init();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  if (App.state.currentView === 'editorView') {
+    App.resizeCanvas();
+  }
+});
+
+// Register Service Worker (PWA 离线支持，仅 https 或 localhost 下注册)
+if ('serviceWorker' in navigator &&
+    (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
+      console.warn('[SW] register failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>

@@ -4260,9 +4260,21 @@ const App = {
   },
 
   async startVoiceRecord() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+      this.toast('当前浏览器不支持录音，请用系统浏览器或 Chrome 打开');
+      return;
+    }
     try {
+      // 选择浏览器支持的录音格式：iOS Safari 只支持 audio/mp4，安卓/桌面用 webm
+      let mimeType = '';
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+      else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+      else if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+      this.state.voiceMimeType = mimeType || ''; // 无法识别时交给浏览器默认
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.state.mediaRecorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm' });
+      const options = mimeType ? { mimeType } : {};
+      this.state.mediaRecorder = new MediaRecorder(stream, options);
       this.state.voiceChunks = [];
       this.state.voiceDataUrl = null;
 
@@ -4271,7 +4283,7 @@ const App = {
       };
 
       this.state.mediaRecorder.onstop = () => {
-        const blob = new Blob(this.state.voiceChunks, { type: 'audio/webm' });
+        const blob = new Blob(this.state.voiceChunks, { type: this.state.voiceMimeType });
         const reader = new FileReader();
         reader.onload = (e) => {
           this.state.voiceDataUrl = e.target.result;
@@ -4283,7 +4295,8 @@ const App = {
         stream.getTracks().forEach(t => t.stop());
       };
 
-      this.state.mediaRecorder.start();
+      // 每秒刷新一次数据块，iOS 上比只在停止时取数据更可靠
+      this.state.mediaRecorder.start(1000);
       this.showRecIndicator();
       this.state.recStartTime = Date.now();
       this.state.recTimer = setInterval(() => {
@@ -4296,7 +4309,13 @@ const App = {
       const voiceBtn = document.getElementById('toolVoice');
       if (voiceBtn) { voiceBtn.textContent = '🔴'; voiceBtn.style.background = '#FEE2E2'; }
     } catch (err) {
-      this.toast('无法访问麦克风');
+      if (err && err.name === 'NotAllowedError') {
+        this.toast('麦克风权限被拒绝，请在浏览器设置中允许');
+      } else if (err && err.name === 'NotFoundError') {
+        this.toast('未检测到麦克风设备');
+      } else {
+        this.toast('无法访问麦克风，请检查浏览器权限');
+      }
       console.error(err);
     }
   },
